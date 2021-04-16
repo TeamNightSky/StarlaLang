@@ -3,6 +3,23 @@ from ply.lex import lex
 
 
 class Lexer:
+
+    reserved_tokens = {
+        'def': 'DEFINE',
+        'null': 'NULL',
+
+        'or': 'OR',
+        'and': 'AND',
+        'xor': 'XOR',
+        'not': 'NOT',
+
+        'for': 'FOR',
+        'in': 'IN',
+        'while': 'WHILE',
+
+        'return': 'RETURN'
+    }
+
     tokens = (
         'MINUS',
         'PLUS',
@@ -11,15 +28,26 @@ class Lexer:
         'POWER',
         'MOD',
 
+        'OR',
+        'AND',
+        'XOR',
+        'NOT',
+
+        # Reserved tokens only
+        'DEFINE',
+        'NULL',
+        'WHILE',
+        'FOR',
+        'IN',
+        'RETURN',
+        # --------------------
+
         'GE',
         'LE',
         'LT',
         'GT',
         'EQ',
         'NE',
-
-        'TYPE',
-        'NAMESPACE',
 
         'LBRACKET',
         'RBRACKET',
@@ -41,24 +69,15 @@ class Lexer:
         'CHAR',
 
         'EQUALS',
-        'NULL',
         'BOOL',
-
-        'DEFINE',
 
         'IF',
         'ELIF',
         'LIKELY',
         'ELSE',
-        
-        'OR',
-        'AND',
-        'XOR',
-        'NOT',
 
-        'FOR',
-        'IN',
-        'WHILE',
+        'TYPE',
+        'NAMESPACE',
     )
 
     t_GE = '>='
@@ -68,19 +87,10 @@ class Lexer:
     t_LT = '<'
     t_GT = '>'
 
-    t_IF = 'if'
-    t_ELIF = 'elif'
-    t_ELSE = 'else'
-    t_LIKELY = 'likely'
-
-    t_OR = 'or|\|\|'
-    t_AND = 'and|&&'
-    t_XOR = 'xor|\^'
-    t_NOT = 'not|!|~'
-    
-    t_FOR = 'for'
-    t_IN = 'in'
-    t_WHILE = 'while'
+    t_OR = '\|\|'
+    t_AND = '&&'
+    t_XOR = '\^'
+    t_NOT = '!|~'
 
     t_MINUS = r'-'
     t_PLUS = r'\+'
@@ -101,10 +111,7 @@ class Lexer:
     t_SEPARATOR = r','
     t_COLON = r':'
 
-    t_NULL = 'null'
     t_BOOL = '(True)|(False)'
-
-    t_DEFINE = 'def'
 
     t_INT = '\d+'
     t_FLOAT = '0\.\d+'
@@ -116,7 +123,11 @@ class Lexer:
     t_EQUALS = '='
 
     t_TYPE = ':[a-zA-Z_][a-zA-Z0-9_]*'
-    t_NAMESPACE = '[a-zA-Z_][a-zA-Z0-9_]*'
+    
+    def t_NAMESPACE(t):
+        '[a-zA-Z_][a-zA-Z0-9_]*'
+        t.type = Lexer.reserved_tokens.get(t.value, 'NAMESPACE')
+        return t
 
     t_ignore = ' \t'
     t_ignore_COMMENT = '\#(.*)'

@@ -1,28 +1,40 @@
-my_dict :dict[:int, :int] = {
-    1: 0,
-    2: 2,
-    3: 3
-}
+#my_dict :dict[:int, :int] = {
+#    1: 2
+#}
 
-def minusfunc (a :int, b :int, c :int) :int {
-    return a - b - c
-}
+#def minus (a :int, b :int, c :int) :int {
+#    return a - b - b
+#}
 
 myvar :str = "The quick \"little\" fox jumped over the 'lazy' brown dog"
 
-mvar :null = null  # lol this is useless
+#mvar :null = null  # lol this is useless
 
-myconstant :constant[:str] = "I am a constant!!! I'm permantent :D"
+#myconstant :constant[:str] = "I am a constant!!! I'm permantent :D"
 
+myarr :list[:int] = [1, 2, 3, 4]
 
-def main (args :list[:str]) :null {
-    output("Hi")
-
-    # Foobars are healthy;
-
-    mylist :list[:int] = [1,2,3,4,5,6,7,8,9]
-
-    for num in mylist {
-        output(num)
-    }
+if 1 > 0 {
+    output("1")
+} elif 0 > -1 {
+    output("-1")
+} else {
+    output("None")
 }
+
+#mysupernestedtype :constant[:dict[:int, :list[:int]]] = {
+#    1 : [1, 2, 3]
+#}
+
+#def main (args :list[:str]) :null {
+#    output("Hi")
+
+    # Foobars are healthy
+
+#    mylist :list[:int] = [1,2,3,4,5,6,7,8,9]
+
+#    for num in mylist {
+#        output(num)
+#    }
+#}
+
