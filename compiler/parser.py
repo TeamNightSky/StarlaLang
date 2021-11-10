@@ -1,4 +1,4 @@
-from ply.yacc import yacc
+from compiler.ply.yacc import yacc
 from .lexer import Lexer
 
 

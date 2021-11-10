@@ -1,4 +1,4 @@
-from ply.lex import lex
+from compiler.ply.lex import lex
 
 
 
@@ -131,4 +131,3 @@ class Lexer:
     @staticmethod
     def lexer(**kwargs):
         return lex(**kwargs, module=Lexer)
-
