@@ -1,7 +1,0 @@
-language = "python"
-run = "python -m compiler main.star"
-
-
-[packager]
-ignorePackages = ["llvmlite"]
-ignorePaths = ["compiler"]
