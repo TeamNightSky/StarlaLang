@@ -6,7 +6,4 @@ with open('main.star', 'r') as f:
     read = f.read()
 
 
-bytecode = c.compile(
-    read, dev=True
-)
-
+bytecode = c.compile(read)

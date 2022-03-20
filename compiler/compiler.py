@@ -2,23 +2,17 @@ import logging
 import os
 import json
 
-from llvmlite import ir, binding as llvm
+from devtools import debug
 from ply import yacc
 
 from .parser import Parser
-from .types import Types
-
-
-llvm.initialize()
-llvm.initialize_native_target()
-llvm.initialize_native_asmprinter()
 
 
 class Compiler(Parser):
     def compile(
         self,
         source: str,
-        dev=True
+        dev: bool = False
     ):
         logging.basicConfig(
             level = logging.ERROR,
@@ -47,35 +41,6 @@ class Compiler(Parser):
         )
 
         if dev:
-            print(json.dumps(tree, indent=2))
-        self.tree_to_module(tree)
-
-
-    def get_type(self, typestruct):
-        return None
-
-
-    def glob_decl(self, name, vartype, module):
-        ir.GlobalVariable(
-            module,
-            vartype,
-            name
-        )
-        return module
-
-    def tree_to_module(self, tree):
-        module = ir.Module(name=os.getcwd())
-        code = tree['program']
-        
-        
-        for statement in code:
-            print(statement)
-            if statement['category'] == "vardecl":
-                self.glob_decl(
-                    statement['data']['name'],
-                    self.get_type(statement['data']['type']),
-                    module
-                )
-        print(module)
-
+            debug(tree)
+        return tree
 

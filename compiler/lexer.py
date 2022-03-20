@@ -17,6 +17,10 @@ class Lexer:
         'in': 'IN',
         'while': 'WHILE',
 
+        'if': 'IF',
+        'elif': 'ELIF',
+        'else': 'ELSE',
+
         'return': 'RETURN'
     }
 
@@ -73,7 +77,6 @@ class Lexer:
 
         'IF',
         'ELIF',
-        'LIKELY',
         'ELSE',
 
         'TYPE',
@@ -126,7 +129,8 @@ class Lexer:
     
     def t_NAMESPACE(t):
         '[a-zA-Z_][a-zA-Z0-9_]*'
-        t.type = Lexer.reserved_tokens.get(t.value, 'NAMESPACE')
+        t.type = Lexer.reserved_tokens.get(t.value.lower(), 'NAMESPACE')
+        print(">>>>"*30, t.value, t.type)
         return t
 
     t_ignore = ' \t'
