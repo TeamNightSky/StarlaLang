@@ -51,6 +51,7 @@ class Lexer(sly.Lexer):
         BINAND,
         BINXOR,
         BINNOT,
+        ARROW,
     }
 
     reserved_tokens = {
@@ -68,6 +69,8 @@ class Lexer(sly.Lexer):
         "else": "ELSE",
         "return": "RETURN",
     }
+
+    ARROW = r"->"
 
     GE = r">="
     LE = r"<="
@@ -103,8 +106,8 @@ class Lexer(sly.Lexer):
     BOOL = r"(True)|(False)"
 
     INT = r"\d+"
-    FLOAT =r"0\.\d+"
-    DOUBLE =r"\d\.\d+"
+    FLOAT = r"0\.\d+"
+    DOUBLE = r"\d\.\d+"
 
     STRING = r"\"()\"|\"([^\\\n]*?)([\\][\\])*\"|\"(.*?[^\\\n])\""
     CHAR = r"'(^\n)'"
@@ -123,7 +126,7 @@ class Lexer(sly.Lexer):
 
     @_(r"\n+")
     def ignore_newline(self, t):
-        self.lineno += t.value.count('\n')
+        self.lineno += t.value.count("\n")
 
     def error(self, t):
         print("Illegal character", t)

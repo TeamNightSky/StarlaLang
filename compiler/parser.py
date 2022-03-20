@@ -1,24 +1,6 @@
 from ply.yacc import yacc
 
 from .lexer import Lexer
-from .models import (
-    Arg,
-    Condition,
-    Expr,
-    For,
-    Func,
-    FuncCall,
-    If,
-    Name,
-    Object,
-    Op,
-    Program,
-    Return,
-    Section,
-    Type,
-    VarDecl,
-    While,
-)
 
 
 class Parser(Lexer):
@@ -34,211 +16,202 @@ class Parser(Lexer):
         ("right", "UMINUS"),  # -5
     )
 
-    def p_empty(p):
-        """program : program statement
-        | statement
-        |"""
+    @_("program code")
+    def empty(self, p):
+        ...
 
-    def p_statement(p):
-        """statement : if
-        | vardecl
-        | funcdecl
-        | whileloop
-        | forloop
-        | return
-        | object"""
+    @_("statement", "expression")
+    def code(self, p):
+        return p[0]
 
-    def p_gt(p):
-        """gt : GT"""
+    @_(
+        "if",
+        "variable_declaration",
+        "function_declaration",
+        "whileloop",
+        "forloop",
+    )
+    def statement(p):
+        return p[0]
 
-    def p_ge(p):
-        """ge : GE"""
+    # If Statements
+    @_("IF expression LBRACE program RBRACE")
+    def if_statement(self, p):
+        ...
 
-    def p_lt(p):
-        """lt : LT"""
+    @_("if_statement ELIF expression LBRACE program RBRACE")
+    def if_statement(self, p):
+        ...
 
-    def p_le(p):
-        """le : LE"""
+    @_("if_statement ELSE LBRACE program RBRACE")
+    def if_statement(self, p):
+        ...
 
-    def p_ne(p):
-        """ne : NE"""
+    @_("expression COLON expression")
+    def item(self, p):
+        ...
 
-    def p_eq(p):
-        """eq : EQ"""
+    @_("items SEPARATOR item")
+    def items(self, p):
+        ...
 
-    def p_comparator(p):
-        """comparator : gt
-        | ge
-        | lt
-        | le
-        | ne
-        | eq"""
+    @_("LBRACE items RBRACE")  # dict
+    def object(self, p):
+        ...
 
-    def p_condition(p):
-        """condition : condition comparator object
-        | LPAREN condition RPAREN
-        | object
-        | condition op condition"""
+    @_("LBRACKET elements RBRACKET")  # list
+    def object(self, p):
+        ...
 
-    def p_condition_not(p):
-        """condition : NOT condition"""
+    @_("LPAREN elements RPAREN")  # tuple
+    def object(p):
+        ...
 
-    def p_if(p):
-        """if : IF condition LBRACE program RBRACE"""
+    @_("function_call")
+    def expression(p):
+        return p[0]
 
-    def p_if_elif(p):
-        """if : if ELIF condition LBRACE program RBRACE"""
+    @_("NAMESPACE")
+    def expression(self, p):
+        ...
 
-    def p_else(p):
-        """if : if ELSE LBRACE program RBRACE"""
+    @_("INT")
+    def object(self, p):
+        ...
 
-    def p_item(p):
-        """item : object COLON object"""
+    @_("FLOAT")
+    def object(self, p):
+        ...
 
-    def p_items(p):
-        """items : items SEPARATOR item
-              | item
-        elements : elements SEPARATOR object
-                 | object"""
+    @_("DOUBLE")
+    def object(self, p):
+        ...
 
-    def p_dict(p):
-        """dict : LBRACE items RBRACE"""
+    @_("STRING")
+    def object(self, p):
+        ...
 
-    def p_list(p):
-        """list : LBRACKET elements RBRACKET"""
+    @_("CHAR")
+    def object(self, p):
+        ...
 
-    def p_tuple(p):
-        """tuple : LPAREN elements RPAREN"""
+    @_("BOOL")
+    def object(self, p):
+        ...
 
-    def p_object(p):
-        """object : dict
-        | list
-        | tuple
-        | int
-        | float
-        | double
-        | string
-        | char
-        | bool
-        | null"""
+    @_("NULL")
+    def object(self, p):
+        ...
 
-    def p_object_other(p):
-        """object : funccall
-        | namespace"""
+    # Type Hints
+    @_("TYPE")
+    def type_hint(self, p):
+        return p[0]
 
-    def p_object_namespace(p):
-        """namespace : NAMESPACE"""
+    @_("structure SEPARATOR type_hint")
+    def structure(self, p):
+        ...
 
-    def p_object_int(p):
-        """int : INT"""
+    @_("type_hint")
+    def structure(self, p):
+        ...
 
-    def p_object_float(p):
-        """float : FLOAT"""
+    @_("TYPE LBRACKET structure RBRACKET")
+    def type_hint(self, p):
+        ...
 
-    def p_object_double(p):
-        """double : DOUBLE"""
+    # Variable Declarations
+    @_("NAMESPACE type_hint EQUALS expression")
+    def variable_declaration(p):
+        ...
 
-    def p_object_string(p):
-        """string : STRING"""
+    @_("NAMESPACE EQUALS expression")
+    def variable_declaration(p):
+        ...
 
-    def p_object_char(p):
-        """char : CHAR"""
-
-    def p_object_bool(p):
-        """bool : BOOL"""
-
-    def p_object_null(p):
-        """null : NULL"""
-
-    def p_type_(p):
-        """type_ : TYPE"""
-
-    def p_structure(p):
-        """structure : structure SEPARATOR type_
-        | type_"""
-
-    def p_type_nested(p):
-        """type_ : TYPE LBRACKET structure RBRACKET"""
-
-    def p_variable_declaration(p):
-        """vardecl : NAMESPACE type_ EQUALS object"""
-
-    def p_variable_assignment(p):
-        """vardecl : NAMESPACE EQUALS object"""
-
-    def p_argument_type_pairs(p):
+    # Function Declarations
+    def arguments_definition(p):
         """argtype_s : argtype_s SEPARATOR object type_
         | NAMESPACE type_"""
 
-    def p_function_declaration(p):
-        """funcdecl : DEFINE namespace LPAREN argtype_s RPAREN type_ LBRACE program RBRACE"""
+    @_(
+        "DEFINE NAMESPACE LPAREN argument_definiton RPAREN ARROW type_hint LBRACE program RBRACE"
+    )
+    def function_declaration(p):
+        ...
 
-    def p_function_return(p):
-        """return : RETURN object"""
+    @_("RETURN expression")
+    def return_statement(self, p):
+        ...
 
-    def p_while_loop(p):
-        """whileloop : WHILE condition LBRACE program RBRACE"""
+    # While Statements
+    @_("WHILE condition LBRACE program RBRACE")
+    def while_loop(self, p):
+        ...
 
-    def p_for_loop(p):
-        """forloop : FOR namespace IN object LBRACE program RBRACE"""
+    # For Statements
+    @_("FOR namespace IN object LBRACE program RBRACE")
+    def for_loop(self, p):
+        ...
 
-    def p_func_call(p):
-        """funccall : object LPAREN elements RPAREN"""
+    # Function Calls
+    @_("expression LPAREN elements RPAREN")
+    def function_call(p):
+        ...
 
-    def p_times(p):
-        """times : TIMES"""
+    # Expression Operations
+    @_(
+        "BINOR",
+        "BINAND",
+        "BINXOR",
+        "OR",
+        "AND",
+        "TIMES",
+        "DIVIDE",
+        "PLUS",
+        "MINUS",
+        "MOD",
+        "POWER",
+        "GT",
+        "GE",
+        "LT",
+        "LE",
+        "NE",
+        "EQ",
+    )
+    def op(self, p):
+        return p[0]
 
-    def p_divide(p):
-        """divide : DIVIDE"""
+    @_("expression op expression")
+    def expression(self, p):
+        ...
 
-    def p_plus(p):
-        """plus : PLUS"""
+    @_(
+        "MINUS object %prec UMINUS",
+        "PLUS object %prec UMINUS",
+        "NOT expression %prec UMINUS",
+    )
+    def expression(self, p):
+        return
 
-    def p_minus(p):
-        """minus : MINUS"""
+    @_("LPAREN expression RPAREN")
+    def expression(self, p):
+        ...
 
-    def p_mod(p):
-        """mod : MOD"""
+    @_("expression op expression")
+    def expression(self, p):
+        ...
 
-    def p_power(p):
-        """power : POWER"""
-        # TODO: Make ops use wrapper functions, so that power actually works (rust uses a `pow()` function)
+    @_("LPAREN expression RPAREN")
+    def expression(self, p):
+        ...
 
-    def p_or(p):
-        """or : OR"""
+    @_("object")
+    def expression(self, p):
+        return p[0]
 
-    def p_and(p):
-        """and : AND"""
-
-    def p_xor(p):
-        """xor : XOR"""
-
-    def p_op(p):
-        """op : times
-        | divide
-        | plus
-        | minus
-        | mod
-        | power
-        | or
-        | and
-        | xor"""
-
-    def p_expression(p):
-        """object : object op object"""
-
-    def p_expression_neg(p):
-        """object : MINUS object %prec UMINUS"""
-
-    def p_espression_paren(p):
-        """object : LPAREN object RPAREN"""
-
-    def p_error(t):
+    def error(self, t):
         if t is None:
             return
         print("Syntax error", t)
         exit(1)
-
-    @staticmethod
-    def parser(**kwargs):
-        return yacc(**kwargs, module=Parser)
