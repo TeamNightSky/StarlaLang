@@ -11,7 +11,8 @@ from .parser import Parser
 class Compiler(Parser):
     def compile(self, source: str, dev: bool = False):
         logging.basicConfig(
-            level=logging.ERROR, format="%(filename)10s:%(lineno)4d:%(message)s"
+            level=logging.ERROR,
+            format="%(filename)10s:%(lineno)4d:%(message)s",
         )
 
         if dev:

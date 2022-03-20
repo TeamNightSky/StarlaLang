@@ -1,11 +1,10 @@
-from compiler import Compiler
+from compiler.lexer import Lexer
 
-c = Compiler()
+lexer = Lexer()
 
 with open("main.star", "r") as f:
     read = f.read()
 
 
-bytecode = c.compile(read)
-
-print(bytecode.json(indent=2))
+for tok in lexer.tokenize(read):
+    print(tok)

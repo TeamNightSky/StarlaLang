@@ -1,7 +1,57 @@
-from ply.lex import lex
+import sly
 
 
-class Lexer:
+class Lexer(sly.Lexer):
+    tokens = {
+        MINUS,
+        PLUS,
+        TIMES,
+        DIVIDE,
+        POWER,
+        MOD,
+        OR,
+        AND,
+        XOR,
+        NOT,
+        # Reserved tokens only
+        DEFINE,
+        NULL,
+        WHILE,
+        FOR,
+        IN,
+        RETURN,
+        # --------------------
+        GE,
+        LE,
+        LT,
+        GT,
+        EQ,
+        NE,
+        LBRACKET,
+        RBRACKET,
+        RBRACE,
+        LBRACE,
+        LPAREN,
+        RPAREN,
+        SEPARATOR,
+        COLON,
+        INT,
+        FLOAT,
+        DOUBLE,
+        STRING,
+        CHAR,
+        EQUALS,
+        BOOL,
+        IF,
+        ELIF,
+        ELSE,
+        TYPE,
+        NAMESPACE,
+        BINOR,
+        BINAND,
+        BINXOR,
+        BINNOT,
+    }
 
     reserved_tokens = {
         "def": "DEFINE",
@@ -19,112 +69,62 @@ class Lexer:
         "return": "RETURN",
     }
 
-    tokens = (
-        "MINUS",
-        "PLUS",
-        "TIMES",
-        "DIVIDE",
-        "POWER",
-        "MOD",
-        "OR",
-        "AND",
-        "XOR",
-        "NOT",
-        # Reserved tokens only
-        "DEFINE",
-        "NULL",
-        "WHILE",
-        "FOR",
-        "IN",
-        "RETURN",
-        # --------------------
-        "GE",
-        "LE",
-        "LT",
-        "GT",
-        "EQ",
-        "NE",
-        "LBRACKET",
-        "RBRACKET",
-        "RBRACE",
-        "LBRACE",
-        "LPAREN",
-        "RPAREN",
-        "SEPARATOR",
-        "COLON",
-        "INT",
-        "FLOAT",
-        "DOUBLE",
-        "STRING",
-        "CHAR",
-        "EQUALS",
-        "BOOL",
-        "IF",
-        "ELIF",
-        "ELSE",
-        "TYPE",
-        "NAMESPACE",
-    )
+    GE = r">="
+    LE = r"<="
+    EQ = r"=="
+    NE = r"!="
+    LT = r"<"
+    GT = r">"
 
-    t_GE = ">="
-    t_LE = "<="
-    t_EQ = "=="
-    t_NE = "!="
-    t_LT = "<"
-    t_GT = ">"
+    BINOR = r"\|\|"
+    BINAND = r"&&"
+    BINXOR = r"\^"
+    BINNOT = r"!|~"
 
-    t_OR = "\|\|"
-    t_AND = "&&"
-    t_XOR = "\^"
-    t_NOT = "!|~"
+    MINUS = r"-"
+    PLUS = r"\+"
+    DIVIDE = r"/"
+    POWER = r"\*\*"
+    TIMES = r"\*"
+    MOD = r"%"
 
-    t_MINUS = r"-"
-    t_PLUS = r"\+"
-    t_DIVIDE = r"/"
-    t_POWER = r"\*\*"
-    t_TIMES = r"\*"
-    t_MOD = "%"
+    LBRACKET = r"\["
+    RBRACKET = r"\]"
 
-    t_LBRACKET = r"\["
-    t_RBRACKET = r"\]"
+    RBRACE = r"}"
+    LBRACE = r"{"
 
-    t_RBRACE = r"}"
-    t_LBRACE = r"{"
+    LPAREN = r"\("
+    RPAREN = r"\)"
 
-    t_LPAREN = r"\("
-    t_RPAREN = r"\)"
+    SEPARATOR = r","
+    COLON = r":"
 
-    t_SEPARATOR = r","
-    t_COLON = r":"
+    BOOL = r"(True)|(False)"
 
-    t_BOOL = "(True)|(False)"
+    INT = r"\d+"
+    FLOAT =r"0\.\d+"
+    DOUBLE =r"\d\.\d+"
 
-    t_INT = "\d+"
-    t_FLOAT = "0\.\d+"
-    t_DOUBLE = "\d\.\d+"
+    STRING = r"\"()\"|\"([^\\\n]*?)([\\][\\])*\"|\"(.*?[^\\\n])\""
+    CHAR = r"'(^\n)'"
 
-    t_STRING = r"\"()\"|\"([^\\\n]*?)([\\][\\])*\"|\"(.*?[^\\\n])\""
-    t_CHAR = r"'(^\n)'"
+    EQUALS = r"="
 
-    t_EQUALS = "="
+    TYPE = ":[a-zA-Z_][a-zA-Z0-9_]*"
 
-    t_TYPE = ":[a-zA-Z_][a-zA-Z0-9_]*"
-
-    def t_NAMESPACE(t):
-        "[a-zA-Z_][a-zA-Z0-9_]*"
+    @_(r"[a-zA-Z_][a-zA-Z0-9_]*")
+    def NAMESPACE(self, t):
         t.type = Lexer.reserved_tokens.get(t.value.lower(), "NAMESPACE")
         return t
 
-    t_ignore = " \t"
-    t_ignore_COMMENT = "\#(.*)"
+    ignore = r" \t"
+    ignore_COMMENT = r"#(.*)"
 
-    def t_newline(t):
-        r"(\n|;)+"
+    @_(r"\n+")
+    def ignore_newline(self, t):
+        self.lineno += t.value.count('\n')
 
-    def t_error(t):
+    def error(self, t):
         print("Illegal character", t)
-        t.lexer.skip(1)
-
-    @staticmethod
-    def lexer(**kwargs):
-        return lex(**kwargs, module=Lexer)
+        self.index += 1
