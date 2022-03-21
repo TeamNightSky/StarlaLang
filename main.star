@@ -6,7 +6,7 @@ def minus (a :int, b :int, c :int) :int {
     return a - b - c
 }
 
-myvar :str = "The quick \"little\" fox jumped over the 'lazy' brown dog"
+myvar = "The quick \"little\" fox jumped over the 'lazy' brown dog"
 
 myarr :list[:int] = [1, 2, 3, 4]
 
@@ -23,7 +23,7 @@ mysupernestedtype :constant[:dict[:int, :list[:int]]] = {
     1 : [1, 2, 3]
 }
 
-def main (args :list[:str]) :null {
+def main (arg :list[:str]) :null {
     output("Hi")
 
     # Foobars are healthy

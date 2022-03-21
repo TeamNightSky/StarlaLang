@@ -11,7 +11,6 @@ class Lexer(sly.Lexer):
         MOD,
         OR,
         AND,
-        XOR,
         NOT,
         # Reserved tokens only
         DEFINE,
@@ -52,6 +51,7 @@ class Lexer(sly.Lexer):
         BINXOR,
         BINNOT,
         ARROW,
+        PASS
     }
 
     reserved_tokens = {
@@ -68,6 +68,7 @@ class Lexer(sly.Lexer):
         "elif": "ELIF",
         "else": "ELSE",
         "return": "RETURN",
+        "pass": "PASS"
     }
 
     ARROW = r"->"
