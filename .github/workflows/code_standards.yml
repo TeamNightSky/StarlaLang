@@ -1,0 +1,37 @@
+name: Code Standards
+
+on:
+  push: # Comment this line to trigger action only on pull-requests (not recommended if you don't pay for GH Actions)
+    paths:
+      - "**.py"
+  pull_request:
+    branches:
+      - master
+      - dev
+    paths:
+      - "**.py"
+  workflow_dispatch:
+
+jobs:
+  code_styling:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Setup Python
+        uses: actions/setup-python@v2
+      - name: Checkout
+        uses: actions/checkout@v2
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+      - name: Install Dependencies
+        run: |
+          pip install poetry
+          poetry config virtualenvs.create false
+          poetry install
+      - name: Run Black
+        run: black compiler --check
+      - name: Run iSort
+        run: flake8 compiler
+      - name: Run MyPy
+        run: mypy compiler --show-error-codes
+      - name: Run PyLint
+        run: pylint compiler

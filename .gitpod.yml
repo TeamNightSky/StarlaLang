@@ -1,0 +1,7 @@
+tasks:
+  - name: Dependencies
+    before: |
+      pip install poetry
+      poetry config virtualenvs.create false
+    init: |
+      poetry install

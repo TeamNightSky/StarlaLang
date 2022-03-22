@@ -1,0 +1,47 @@
+[tool.poetry]
+name = "Starlalang"
+version = "0.1.0"
+description = ""
+authors = [
+    "GrandMoff100 <minecraftcrusher100@gmail.com>",
+    "FoxNerdSaysMoo <<>>"
+]
+
+[tool.poetry.dependencies]
+python = "^3.8"
+pydantic = "^1.9.0"
+sly = "^0.4"
+
+[tool.poetry.dev-dependencies]
+devtools = "^0.8.0"
+mypy = "^0.941"
+black = "^22.1.0"
+isort = "^5.10.1"
+pylint = "^2.12.2"
+pre-commit = "^2.17.0"
+
+[tool.isort]
+profile = "black"
+
+[tool.mypy]
+disable_error_code = "name-defined, no-redef"
+
+[tool.pylint.master]
+extension-pkg-whitelist = ["pydantic"]
+
+[tool.pylint.messages_control]
+disable = [
+    "undefined-variable",
+    "invalid-name",
+    "missing-module-docstring",
+    "missing-class-docstring",
+    "missing-function-docstring",
+    "too-few-public-methods",
+    "too-many-public-methods",
+    "function-redefined",
+    "no-self-use"
+]
+
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"
