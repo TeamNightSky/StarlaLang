@@ -1,15 +1,15 @@
-from typing import Tuple
+import typing as t
 
 from .base import Ast
 
 
 class Dict(Ast):
-    items: Tuple[Tuple["ExpressionType", "ExpressionType"], ...]
+    items: t.Tuple[t.Tuple["ExpressionType", "ExpressionType"], ...]
 
 
 class List(Ast):
-    items: Tuple["ExpressionType", ...]
+    items: t.Tuple["ExpressionType", ...]
 
 
 class Tuple(Ast):
-    items: Tuple["ExpressionType", ...]
+    items: t.Tuple["ExpressionType", ...]

@@ -23,6 +23,25 @@ pre-commit = "^2.17.0"
 [tool.isort]
 profile = "black"
 
+[tool.mypy]
+disable_error_code = "name-defined, no-redef"
+
+[tool.pylint.master]
+extension-pkg-whitelist = ["pydantic"]
+
+[tool.pylint.messages_control]
+disable = [
+    "undefined-variable",
+    "invalid-name",
+    "missing-module-docstring",
+    "missing-class-docstring",
+    "missing-function-docstring",
+    "too-few-public-methods",
+    "too-many-public-methods",
+    "function-redefined",
+    "no-self-use"
+]
+
 [build-system]
 requires = ["poetry-core>=1.0.0"]
 build-backend = "poetry.core.masonry.api"

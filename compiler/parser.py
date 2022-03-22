@@ -1,8 +1,9 @@
+import sys
 import typing as t
 
-import sly
+import sly  # type: ignore[import]
 
-from .lexer import Lexer
+from .lexer import StarlaLexer
 from .models import (
     Arg,
     Bool,
@@ -26,7 +27,6 @@ from .models import (
     Operator,
     Pass,
     Return,
-    StatementType,
     String,
     Tuple,
     TypeHint,
@@ -35,8 +35,8 @@ from .models import (
 )
 
 
-class Parser(sly.Parser):
-    tokens: t.Set[str] = Lexer.tokens
+class StarlaParser(sly.Parser):
+    tokens: t.Set[str] = StarlaLexer.tokens
 
     precedence: t.Tuple[t.Tuple[str, ...], ...] = (
         ("left", "RETURN"),  # return ( expr )
@@ -166,7 +166,7 @@ class Parser(sly.Parser):
         return Bool.construct(value=p[0])
 
     @_("NULL")
-    def object(self, p) -> Null:
+    def object(self, p) -> Null:  # pylint: disable=unused-argument
         return Null.construct()
 
     # Type Hints
@@ -230,7 +230,10 @@ class Parser(sly.Parser):
         )
 
     @_(
-        "DEFINE NAMESPACE LPAREN positional_arguments_definition default_arguments_definition RPAREN ARROW type_hint LBRACE module RBRACE"
+        "DEFINE NAMESPACE "
+        "LPAREN positional_arguments_definition default_arguments_definition RPAREN "
+        "ARROW type_hint "
+        "LBRACE module RBRACE"
     )
     def function_declaration(self, p) -> FunctionDeclaration:
         return FunctionDeclaration.construct(
@@ -242,7 +245,10 @@ class Parser(sly.Parser):
         )
 
     @_(
-        "DEFINE NAMESPACE LPAREN positional_arguments_definition  RPAREN ARROW type_hint LBRACE module RBRACE"
+        "DEFINE NAMESPACE "
+        "LPAREN positional_arguments_definition RPAREN "
+        "ARROW type_hint "
+        "LBRACE module RBRACE"
     )
     def function_declaration(self, p) -> FunctionDeclaration:
         return FunctionDeclaration(
@@ -253,7 +259,10 @@ class Parser(sly.Parser):
         )
 
     @_(
-        "DEFINE NAMESPACE LPAREN default_arguments_definition RPAREN ARROW type_hint LBRACE module RBRACE"
+        "DEFINE NAMESPACE "
+        "LPAREN default_arguments_definition RPAREN "
+        "ARROW type_hint "
+        "LBRACE module RBRACE"
     )
     def function_declaration(self, p) -> FunctionDeclaration:
         return FunctionDeclaration.construct(
@@ -305,7 +314,9 @@ class Parser(sly.Parser):
     @_("expression LPAREN elements SEPARATOR keyword_arguments RPAREN")
     def function_call(self, p) -> Call:
         return Call.construct(
-            target=p.expression, args=p.elements, kwargs=p.keyword_arguments,
+            target=p.expression,
+            args=p.elements,
+            kwargs=p.keyword_arguments,
         )
 
     @_("expression LPAREN elements RPAREN")
@@ -361,15 +372,16 @@ class Parser(sly.Parser):
         return p[1]
 
     @_("PASS")
-    def pass_statement(self, p) -> Pass:
+    def pass_statement(self, p) -> Pass:  # pylint: disable=unused-argument
         return Pass.construct()
 
     @_("object")
     def expression(self, p) -> ObjectType:
         return p[0]
 
-    def error(self, t):
-        if t is None:
+    @staticmethod
+    def error(token):
+        if token is None:
             return
-        print("Syntax error", t)
-        exit(1)
+        print("Syntax error", token)
+        sys.exit(1)

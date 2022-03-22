@@ -1,29 +1,24 @@
-import json
 import logging
-import os
 
-from devtools import debug
-from ply import yacc
+from devtools import debug  # type: ignore[import]
 
-from .parser import Parser
+from .lexer import StarlaLexer  # type: ignore[attr-defined]
+from .models import Module
+from .parser import StarlaParser  # type: ignore[attr-defined]
 
 
-class Compiler(Parser):
-    def compile(self, source: str, dev: bool = False):
+class StarlaCompiler:
+    def __init__(self) -> None:
+        self.lexer = StarlaLexer()
+        self.parser = StarlaParser()
+
+    def compile(self, source: str, dev: bool = False) -> Module:
         logging.basicConfig(
             level=logging.ERROR,
             format="%(filename)10s:%(lineno)4d:%(message)s",
         )
 
-        if dev:
-            log = logging.getLogger()
-        else:
-            log = yacc.NullLogger()
-
-        lexer = Compiler.lexer(debug=dev, debuglog=log)
-        parser = Compiler.parser(debug=dev, write_tables=False, debuglog=log)
-
-        tree = parser.parse(source, lexer=lexer, debug=dev)
+        tree = self.parser.parse(self.lexer.tokenize(source))
 
         if dev:
             debug(tree)

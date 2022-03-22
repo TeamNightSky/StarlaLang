@@ -1,7 +1,6 @@
-from typing import Optional, Tuple, Union
+from typing import Optional, Tuple
 
 from .base import Ast
-from .module import Module
 from .namespace import Namespace
 from .types import TypeHint
 

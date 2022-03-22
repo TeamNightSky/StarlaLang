@@ -1,4 +1,4 @@
-import devtools
+from typing import Literal
 
 from .base import Ast
 
@@ -28,4 +28,4 @@ class Bool(Ast):
 
 
 class Null(Ast):
-    value: type(None) = None
+    value: Literal[None] = None

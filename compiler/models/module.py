@@ -1,5 +1,3 @@
-from typing import Tuple, Union
-
 from .base import Ast
 
 

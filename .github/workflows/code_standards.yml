@@ -30,8 +30,6 @@ jobs:
       - name: Run Black
         run: black compiler --check
       - name: Run iSort
-        run: isort compiler --check-only
-      - name: Run Flake8
         run: flake8 compiler
       - name: Run MyPy
         run: mypy compiler --show-error-codes
