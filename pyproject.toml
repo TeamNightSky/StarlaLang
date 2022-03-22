@@ -11,6 +11,7 @@ authors = [
 python = "^3.8"
 pydantic = "^1.9.0"
 sly = "^0.4"
+click = "^8.0.4"
 
 [tool.poetry.dev-dependencies]
 mypy = "^0.941"
