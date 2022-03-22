@@ -51,7 +51,8 @@ jobs:
         run: |
           pip install poetry
           poetry config virtualenvs.create false
-          poetry install
+          poetry install --no-dev
+          pip install pytest
       - name: Run Tests
         run: pytest tests
 

@@ -91,7 +91,7 @@ class TestCorrectTokens:
 
 
     def test_STRING(self):
-        for tok in lexer.tokenize(r""" "abc123"  "\'lol\'" '\n\n\n' """):
+        for tok in lexer.tokenize(r""" "abc123"  "\'lol\'" "\n\n\n" """):
             assert tok.type == "STRING"
 
 

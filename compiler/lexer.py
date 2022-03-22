@@ -116,10 +116,9 @@ class StarlaLexer(sly.Lexer):
         "pass": "PASS",
     }
 
-    @staticmethod
     @_(r"[a-zA-Z_][a-zA-Z0-9_]*")
-    def NAMESPACE(t):
-        t.type = Lexer.reserved_tokens.get(t.value, "NAMESPACE")
+    def NAMESPACE(self, t):
+        t.type = self.reserved_tokens.get(t.value, "NAMESPACE")
         return t
 
     ignore = r" \t"
