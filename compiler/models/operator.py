@@ -1,4 +1,5 @@
 from typing import Tuple
+
 from .base import Ast
 
 
@@ -8,4 +9,4 @@ class Operator(Ast):
 
 class Operation(Ast):
     op: Operator
-    arguments: Tuple["ExpressionType"]
+    arguments: Tuple["ExpressionType", ...]

@@ -1,10 +1,6 @@
 from .base import Ast
 
 
-class NamespaceContext(Ast):
-    pass
-
-
 class Namespace(Ast):
     name: str
-    ctx: NamespaceContext
+    ctx: str  # We shouldn't need this, because this would be defined in variable declaration

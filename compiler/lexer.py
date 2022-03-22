@@ -51,7 +51,7 @@ class Lexer(sly.Lexer):
         BINXOR,
         BINNOT,
         ARROW,
-        PASS
+        PASS,
     }
 
     reserved_tokens = {
@@ -68,7 +68,7 @@ class Lexer(sly.Lexer):
         "elif": "ELIF",
         "else": "ELSE",
         "return": "RETURN",
-        "pass": "PASS"
+        "pass": "PASS",
     }
 
     ARROW = r"->"
@@ -84,6 +84,17 @@ class Lexer(sly.Lexer):
     BINAND = r"&&"
     BINXOR = r"\^"
     BINNOT = r"!|~"
+
+    BOOL = r"(True)|(False)"
+
+    INT = r"\d+"
+    FLOAT = r"0\.\d+"
+    DOUBLE = r"\d\.\d+"
+
+    STRING = r"\"()\"|\"([^\\\n]*?)([\\][\\])*\"|\"(.*?[^\\\n])\""
+    CHAR = r"'(^\n)'"
+
+    TYPE = ":[a-zA-Z_][a-zA-Z0-9_]*"  # Needs to go before COLON because its longer.
 
     MINUS = r"-"
     PLUS = r"\+"
@@ -103,32 +114,20 @@ class Lexer(sly.Lexer):
 
     SEPARATOR = r","
     COLON = r":"
-
-    BOOL = r"(True)|(False)"
-
-    INT = r"\d+"
-    FLOAT = r"0\.\d+"
-    DOUBLE = r"\d\.\d+"
-
-    STRING = r"\"()\"|\"([^\\\n]*?)([\\][\\])*\"|\"(.*?[^\\\n])\""
-    CHAR = r"'(^\n)'"
-
     EQUALS = r"="
-
-    TYPE = ":[a-zA-Z_][a-zA-Z0-9_]*"
 
     @_(r"[a-zA-Z_][a-zA-Z0-9_]*")
     def NAMESPACE(self, t):
-        t.type = Lexer.reserved_tokens.get(t.value.lower(), "NAMESPACE")
+        t.type = Lexer.reserved_tokens.get(t.value, "NAMESPACE")
         return t
 
     ignore = r" \t"
     ignore_COMMENT = r"#(.*)"
 
     @_(r"\n+")
-    def ignore_newline(self, t):
+    def ignore_newline(self, t) -> None:
         self.lineno += t.value.count("\n")
 
-    def error(self, t):
+    def error(self, t) -> None:
         print("Illegal character", t)
         self.index += 1

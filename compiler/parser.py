@@ -6,6 +6,7 @@ from .lexer import Lexer
 from .models import (
     Arg,
     Bool,
+    Call,
     Char,
     DefaultArg,
     Dict,
@@ -17,22 +18,20 @@ from .models import (
     IfStatement,
     Int,
     List,
+    Module,
     Namespace,
-    NamespaceContext,
     Null,
     ObjectType,
+    Operation,
+    Operator,
+    Pass,
+    Return,
     StatementType,
     String,
     Tuple,
     TypeHint,
     VariableDeclaration,
     WhileLoop,
-    Module,
-    Return,
-    Call,
-    Operator,
-    Operation,
-    Pass
 )
 
 
@@ -49,16 +48,18 @@ class Parser(sly.Parser):
         ("right", "UMINUS"),  # -5
         ("left", "MOD"),  # 4 % 3
         ("left", "POWER"),  # 2 ** 3
-        
     )
 
     @_("module code")
     def module(self, p) -> Module:
-        p.module.code += (p.code,)
-        return p.module
+        return Module.construct(body=p.module.body + (p.code,))
+
+    @_("code")
+    def module(self, p):
+        return Module.construct(body=(p.code,))
 
     @_("statement", "expression")
-    def code(self, p) -> t.Union["StatementType", ExpressionType]:
+    def code(self, p) -> t.Union["StatementType", "ExpressionType"]:
         return p[0]
 
     @_(
@@ -68,7 +69,7 @@ class Parser(sly.Parser):
         "while_loop",
         "for_loop",
         "return_statement",
-        "pass_statement"
+        "pass_statement",
     )
     def statement(self, p) -> "StatementType":
         return p[0]
@@ -76,18 +77,21 @@ class Parser(sly.Parser):
     # If Statements
     @_("IF expression LBRACE module RBRACE")
     def if_statement(self, p) -> IfStatement:
-        return IfStatement(conditionals=((p.expression, p.module.code),))
+        return IfStatement.construct(conditionals=((p.expression, p.module.body),))
 
     @_("if_statement ELIF expression LBRACE module RBRACE")
     def if_statement(self, p) -> IfStatement:
-        return IfStatement(
-            conditionals=p.if_statement.conditionals + ((p.expression, p.module.code),),
+        return IfStatement.construct(
+            conditionals=p.if_statement.conditionals + ((p.expression, p.module.body),),
             default=p.if_statement.default,
         )
 
     @_("if_statement ELSE LBRACE module RBRACE")
     def if_statement(self, p) -> IfStatement:
-        return IfStatement(conditionals=p.if_statement.conditionals, default=p.module.code)
+        return IfStatement.construct(
+            conditionals=p.if_statement.conditionals,
+            default=p.module.body,
+        )
 
     # Dict
     @_("expression COLON expression")
@@ -104,7 +108,7 @@ class Parser(sly.Parser):
 
     @_("LBRACE items RBRACE")  # dict
     def object(self, p) -> Dict:
-        return Dict(items=p.items)
+        return Dict.construct(items=p.items)
 
     # List
     @_("expression SEPARATOR expression")
@@ -113,19 +117,21 @@ class Parser(sly.Parser):
 
     @_("elements SEPARATOR expression")
     def elements(self, p) -> t.Tuple[ExpressionType, ...]:
-        return p.items + (p.expression,)
+        return p.elements + (p.expression,)
 
     @_("LBRACKET elements RBRACKET", "LBRACKET expression RBRACKET")  # list
     def object(self, p) -> List:
         if isinstance(p[1], tuple):
-            return List(items=p.elements)
-        return List(items=(p.expression,))
+            return List.construct(items=p.elements)
+        return List.construct(items=(p.expression,))
 
-    @_("LPAREN elements RPAREN", "LPAREN expression RPAREN")  # tuple
+    @_("LPAREN expression SEPARATOR RPAREN")  # tuple
     def object(self, p) -> Tuple:
-        if isinstance(p[1], tuple):
-            return List(items=p.elements)
-        return List(items=(p.expression,))
+        return Tuple.construct(items=(p.expression,))
+
+    @_("LPAREN elements RPAREN", "LPAREN elements SEPARATOR RPAREN")  # tuple
+    def object(self, p) -> Tuple:
+        return Tuple.construct(items=p.elements)
 
     @_("function_call")
     def expression(self, p) -> ExpressionType:
@@ -133,40 +139,40 @@ class Parser(sly.Parser):
 
     @_("NAMESPACE")
     def expression(self, p) -> Namespace:
-        return Namespace(target=p[0].value, ctx=Load())
+        return Namespace.construct(name=p[0], ctx="load")
 
     @_("INT")
     def object(self, p) -> Int:
-        return Int(value=p[0].value)
+        return Int.construct(value=p[0])
 
     @_("FLOAT")
     def object(self, p) -> Float:
-        return Float(value=p[0].value)
+        return Float.construct(value=p[0])
 
     @_("DOUBLE")
     def object(self, p) -> Double:
-        return Double(value=p[0].value)
+        return Double.construct(value=p[0])
 
     @_("STRING")
     def object(self, p) -> String:
-        return String(value=p[0].value)
+        return String.construct(value=p[0])
 
     @_("CHAR")
     def object(self, p) -> Char:
-        return Char(value=p[0].value)
+        return Char.construct(value=p[0])
 
     @_("BOOL")
     def object(self, p) -> Bool:
-        return Bool(value=p[0].value)
+        return Bool.construct(value=p[0])
 
     @_("NULL")
     def object(self, p) -> Null:
-        return Null()
+        return Null.construct()
 
     # Type Hints
     @_("TYPE")
     def type_hint(self, p) -> TypeHint:
-        return TypeHint(type_value=p[0].value.replace(":", "", 1))
+        return TypeHint.construct(type_value=p[0].replace(":", "", 1))
 
     @_("structure SEPARATOR type_hint")
     def structure(self, p) -> t.Tuple[TypeHint, ...]:
@@ -178,90 +184,141 @@ class Parser(sly.Parser):
 
     @_("TYPE LBRACKET structure RBRACKET")
     def type_hint(self, p) -> TypeHint:
-        return TypeHint(type_value=p[0].value.replace(":", "", 1), type_structure=p[2])
+        return TypeHint.construct(
+            type_value=p[0].replace(":", "", 1), type_structure=p[2]
+        )
 
     # Variable Declarations
     @_("NAMESPACE type_hint EQUALS expression")
     def variable_declaration(self, p) -> VariableDeclaration:
-        ...
+        return VariableDeclaration.construct(
+            target=Namespace.construct(name=p[0], ctx="store"),
+            annotation=p.type_hint,
+            value=p.expression,
+        )
 
     @_("NAMESPACE EQUALS expression")
     def variable_declaration(self, p) -> VariableDeclaration:
-        ...
+        return VariableDeclaration.construct(
+            target=Namespace.construct(name=p[0], ctx="store"),
+            value=p.expression,
+        )
 
     # Function Declarations
     @_("NAMESPACE type_hint")
     def positional_arguments_definition(self, p) -> t.Tuple[Arg]:
-        return (Arg(arg=p[0].value, annotation=p[1]),)
+        return (Arg.construct(arg=p[0], annotation=p[1]),)
 
     @_("positional_arguments_definition SEPARATOR NAMESPACE type_hint")
     def positional_arguments_definition(self, p) -> t.Tuple[Arg, ...]:
         return p.positional_arguments_definition + (
-            Arg(arg=p[2].value, annotation=p[3]),
+            Arg.construct(arg=p[2], annotation=p[3]),
         )
 
     @_("NAMESPACE type_hint EQUALS expression")
-    def default_argument_definition(self, p) -> t.Tuple[DefaultArg]:
-        return (DefaultArg(arg=p[0].value, annotation=p[1], value=p[3]),)
+    def default_arguments_definition(self, p) -> t.Tuple[DefaultArg]:
+        return (DefaultArg.construct(arg=p[0], annotation=p[1], value=p[3]),)
 
-    @_("default_argument_definition SEPARATOR NAMESPACE type_hint EQUALS expression")
-    def default_argument_definition(self, p) -> t.Tuple[DefaultArg, ...]:
+    @_("default_arguments_definition SEPARATOR NAMESPACE type_hint EQUALS expression")
+    def default_arguments_definition(self, p) -> t.Tuple[DefaultArg, ...]:
         return p.default_argument_definition + (
-            DefaultArg(arg=p[2].value, annotation=p[3], value=p[5]),
+            DefaultArg.construct(
+                arg=p[2],
+                annotation=p.type_hint,
+                value=p.expression,
+            ),
         )
 
     @_(
-        "DEFINE NAMESPACE LPAREN positional_arguments keyword_arguments RPAREN ARROW type_hint LBRACE module RBRACE"
+        "DEFINE NAMESPACE LPAREN positional_arguments_definition default_arguments_definition RPAREN ARROW type_hint LBRACE module RBRACE"
     )
-    def function_declaration(
-        self,
-    ):
-        ...
+    def function_declaration(self, p) -> FunctionDeclaration:
+        return FunctionDeclaration.construct(
+            target=Namespace.construct(name=p[1], ctx="store"),
+            arguments=p.positional_arguments_definition,
+            default_arguments=p.default_argument_definition,
+            annotation=p.type_hint,
+            body=p.module.body,
+        )
+
+    @_(
+        "DEFINE NAMESPACE LPAREN positional_arguments_definition  RPAREN ARROW type_hint LBRACE module RBRACE"
+    )
+    def function_declaration(self, p) -> FunctionDeclaration:
+        return FunctionDeclaration(
+            target=Namespace.construct(name=p[1], ctx="store"),
+            arguments=p.positional_arguments_definition,
+            annotation=p.type_hint,
+            body=p.module.body,
+        )
+
+    @_(
+        "DEFINE NAMESPACE LPAREN default_arguments_definition RPAREN ARROW type_hint LBRACE module RBRACE"
+    )
+    def function_declaration(self, p) -> FunctionDeclaration:
+        return FunctionDeclaration.construct(
+            target=Namespace.construct(name=p[1], ctx="store"),
+            default_arguments=p.default_argument_definition,
+            annotation=p.type_hint,
+            body=p.module.body,
+        )
+
+    @_("DEFINE NAMESPACE LPAREN RPAREN ARROW type_hint LBRACE module RBRACE")
+    def function_declaration(self, p) -> FunctionDeclaration:
+        return FunctionDeclaration.construct(
+            target=Namespace.construct(name=p[1], ctx="store"),
+            annotation=p.type_hint,
+            body=p.module.body,
+        )
 
     @_("RETURN expression")
     def return_statement(self, p) -> Return:
-        return Return(value=p[1])
+        return Return.construct(value=p[1])
 
     # While Statements
     @_("WHILE expression LBRACE module RBRACE")
     def while_loop(self, p) -> WhileLoop:
-        return WhileLoop(condition=p[1], body=p.module.code)
+        return WhileLoop.construct(conditional=p[1], body=p.module.body)
 
     # For Statements
     @_("FOR NAMESPACE IN expression LBRACE module RBRACE")
     def for_loop(self, p) -> ForLoop:
-        return ForLoop(
-            target=Namespace(name=p[1].value, ctx="store"),
+        return ForLoop.construct(
+            target=Namespace.construct(name=p[1], ctx="store"),
             iterator=p.expression,
-            body=p.module.code
+            body=p.module.body,
         )
 
     # Function Calls
-    @_("keyword_arguments")
-    def keyword_arguments(self, p):
-        pass
+    @_("NAMESPACE EQUALS expression")
+    def keyword_arguments(self, p) -> t.Tuple[t.Tuple[str, "ExpressionType"]]:
+        return ((p[0], p.expression),)
 
-    @_("positional_arguments")
-    def positional_arguments(self, p):
-        pass
+    @_("keyword_arguments NAMESPACE EQUALS expression")
+    def keyword_arguments(self, p) -> t.Tuple[t.Tuple[str, "ExpressionType"], ...]:
+        return p.keyword_arguments + ((p[1], p.expression),)
 
     @_("expression LPAREN keyword_arguments RPAREN")
     def function_call(self, p) -> Call:
-        return Call(
-            target=p[0],
+        return Call.construct(target=p.expression, kwargs=dict(p.keyword_arguments))
+
+    @_("expression LPAREN elements SEPARATOR keyword_arguments RPAREN")
+    def function_call(self, p) -> Call:
+        return Call.construct(
+            target=p.expression, args=p.elements, kwargs=p.keyword_arguments,
         )
 
-    @_("expression LPAREN positional_arguments keyword_arguments RPAREN")
+    @_("expression LPAREN elements RPAREN")
     def function_call(self, p) -> Call:
-        return Call(
-            target=p[0],
-        )
+        return Call.construct(target=p.expression, args=p.elements)
 
-    @_("expression LPAREN positional_arguments RPAREN")
+    @_("expression LPAREN expression RPAREN")
     def function_call(self, p) -> Call:
-        return Call(
-            target=p[0],
-        )
+        return Call.construct(target=p.expression0, args=(p.expression1,))
+
+    @_("expression LPAREN RPAREN")
+    def function_call(self, p) -> Call:
+        return Call.construct(target=p.expression)
 
     # Expression Operations
     @_(
@@ -284,11 +341,11 @@ class Parser(sly.Parser):
         "EQ",
     )
     def op(self, p) -> Operator:
-        return Operator(type=p[0].type)
+        return Operator.construct(type=p[0])
 
     @_("expression op expression")
     def expression(self, p) -> Operation:
-        return Operation(op=p[1], arguments=(p[0], p[2]))
+        return Operation.construct(op=p[1], arguments=(p[0], p[2]))
 
     @_(
         "MINUS expression %prec UMINUS",
@@ -297,7 +354,7 @@ class Parser(sly.Parser):
         "BINNOT expression %prec UMINUS",
     )
     def expression(self, p) -> Operation:
-        return Operation(op=Operator(type=p[0].type), arguments=(p[1],))
+        return Operation.construct(op=Operator.construct(type=p[0]), arguments=(p[1],))
 
     @_("LPAREN expression RPAREN")
     def expression(self, p) -> ExpressionType:
@@ -305,7 +362,7 @@ class Parser(sly.Parser):
 
     @_("PASS")
     def pass_statement(self, p) -> Pass:
-        return Pass()
+        return Pass.construct()
 
     @_("object")
     def expression(self, p) -> ObjectType:

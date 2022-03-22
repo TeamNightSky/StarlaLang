@@ -1,4 +1,5 @@
-from typing import Tuple, Union, Optional
+from typing import Optional, Tuple, Union
+
 from .base import Ast
 from .module import Module
 from .namespace import Namespace
@@ -6,19 +7,19 @@ from .types import TypeHint
 
 
 class IfStatement(Ast):
-    conditionals: Tuple[Tuple["ExpressionType", Tuple[Union["StatementType", "ExpressionType"], ...]], ...] = ()
-    default: Optional[Module] = None
+    conditionals: Tuple[Tuple["ExpressionType", "BodyType"], ...] = ()
+    default: Optional["BodyType"] = None
 
 
 class WhileLoop(Ast):
     conditional: "ExpressionType"
-    body: Tuple[Union["StatementType", "ExpressionType"], ...]
+    body: "BodyType"
 
 
 class ForLoop(Ast):
     target: Namespace
     iterator: "ExpressionType"
-    orelse: Optional[Module] = None
+    orelse: Optional["BodyType"] = None
 
 
 class Arg(Ast):
@@ -34,8 +35,10 @@ class DefaultArg(Ast):
 
 class FunctionDeclaration(Ast):
     target: Namespace
-    arguments: Tuple[Tuple[Namespace, TypeHint], ...]
-    body: Tuple[Union["StatementType", "ExpressionType"], ...]
+    annotation: TypeHint
+    arguments: Optional[Tuple[Arg, ...]] = None
+    default_arguments: Optional[Tuple[DefaultArg, ...]] = None
+    body: "BodyType"
 
 
 class Return(Ast):

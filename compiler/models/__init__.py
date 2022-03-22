@@ -1,10 +1,10 @@
-from typing import Union
+import typing as t
 
 from .base import Ast
 from .composite import Dict, List, Tuple
 from .expressions import Call
 from .module import Module
-from .namespace import Namespace, NamespaceContext
+from .namespace import Namespace
 from .operator import Operation, Operator
 from .primitives import Bool, Char, Double, Float, Int, Null, String
 from .statements import (
@@ -20,7 +20,7 @@ from .statements import (
 )
 from .types import TypeHint
 
-StatementType = Union[
+StatementType = t.Union[
     IfStatement,
     VariableDeclaration,
     FunctionDeclaration,
@@ -30,9 +30,11 @@ StatementType = Union[
     Return,
 ]
 
-ObjectType = Union[Int, Float, Double, String, Char, Null, Bool, Dict, Tuple, List]
+ObjectType = t.Union[Int, Float, Double, String, Char, Bool, Dict, Tuple, List]
 
-ExpressionType = Union[ObjectType, Call]
+ExpressionType = t.Union[ObjectType, Call]
+
+BodyType = t.Tuple[t.Union[ExpressionType, StatementType], ...]
 
 
 for model in Ast.__subclasses__():

@@ -10,4 +10,11 @@ with open("main.star", "r") as f:
     read = f.read()
 
 
-parser.parse(lexer.tokenlize())
+def tokens():
+    for tok in lexer.tokenize(read):
+        yield tok
+
+
+from devtools import debug
+
+debug(parser.parse(tokens()))
