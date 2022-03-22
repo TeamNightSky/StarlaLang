@@ -17,7 +17,6 @@ mypy = "^0.941"
 isort = "^5.10.1"
 pylint = "^2.12.2"
 black = "^22.1.0"
-devtools = "^0.8.0"
 
 [tool.isort]
 profile = "black"
@@ -38,7 +37,8 @@ disable = [
     "too-few-public-methods",
     "too-many-public-methods",
     "function-redefined",
-    "no-self-use"
+    "no-self-use",
+    "used-before-assignment"
 ]
 
 [build-system]

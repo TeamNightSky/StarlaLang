@@ -1,7 +1,5 @@
 import logging
 
-from devtools import debug  # type: ignore[import]
-
 from .lexer import StarlaLexer  # type: ignore[attr-defined]
 from .models import Module
 from .parser import StarlaParser  # type: ignore[attr-defined]
@@ -12,14 +10,11 @@ class StarlaCompiler:
         self.lexer = StarlaLexer()
         self.parser = StarlaParser()
 
-    def compile(self, source: str, dev: bool = False) -> Module:
+    def compile(self, source: str) -> Module:
         logging.basicConfig(
             level=logging.ERROR,
             format="%(filename)10s:%(lineno)4d:%(message)s",
         )
 
         tree = self.parser.parse(self.lexer.tokenize(source))
-
-        if dev:
-            debug(tree)
         return tree
