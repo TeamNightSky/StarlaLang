@@ -1,4 +1,5 @@
 import io
+
 import click
 
 from .compiler import StarlaCompiler
@@ -13,4 +14,4 @@ def cli(file: io.TextIOWrapper):
     click.echo(tree)
 
 
-cli()
+cli()  # pylint: disable=no-value-for-parameter
