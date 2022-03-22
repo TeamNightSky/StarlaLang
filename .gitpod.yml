@@ -1,7 +1,8 @@
 tasks:
   - name: Dependencies
     before: |
-      pip install poetry
-      poetry config virtualenvs.create false
+      virtualenv /workspace/venv
     init: |
+      . /workspace/venv/bin/activate
+      /workspace/venv/bin/python -m pip install poetry
       poetry install

@@ -4,6 +4,7 @@ on:
   push: # Comment this line to trigger action only on pull-requests (not recommended if you don't pay for GH Actions)
     paths:
       - "**.py"
+    branches: [master]
   pull_request:
     branches:
       - master
@@ -14,6 +15,7 @@ on:
 
 jobs:
   code_styling:
+    name: Code Styling
     runs-on: ubuntu-latest
     steps:
       - name: Setup Python
@@ -30,8 +32,28 @@ jobs:
       - name: Run Black
         run: black compiler --check
       - name: Run iSort
-        run: flake8 compiler
+        run: isort compiler --check
       - name: Run MyPy
         run: mypy compiler --show-error-codes
       - name: Run PyLint
         run: pylint compiler
+  tests:
+    name: Run Pytest Tests
+    runs-on: ubuntu-latest
+    steps:
+      - name: Setup Python
+        uses: actions/setup-python@v2
+      - name: Checkout
+        uses: actions/checkout@v2
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+      - name: Install Dependencies
+        run: |
+          pip install poetry
+          poetry config virtualenvs.create false
+          poetry install --no-dev
+          pip install pytest
+      - name: Run Tests
+        run: pytest tests
+
+     

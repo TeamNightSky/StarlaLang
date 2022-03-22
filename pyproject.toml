@@ -13,12 +13,11 @@ pydantic = "^1.9.0"
 sly = "^0.4"
 
 [tool.poetry.dev-dependencies]
-devtools = "^0.8.0"
 mypy = "^0.941"
-black = "^22.1.0"
 isort = "^5.10.1"
 pylint = "^2.12.2"
-pre-commit = "^2.17.0"
+black = "^22.1.0"
+pytest = "^7.1.1"
 
 [tool.isort]
 profile = "black"
@@ -39,7 +38,8 @@ disable = [
     "too-few-public-methods",
     "too-many-public-methods",
     "function-redefined",
-    "no-self-use"
+    "no-self-use",
+    "used-before-assignment"
 ]
 
 [build-system]
