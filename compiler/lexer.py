@@ -2,51 +2,6 @@ import sly  # type: ignore[import]
 
 
 class StarlaLexer(sly.Lexer):
-    ARROW = r"->"
-
-    GE = r">="
-    LE = r"<="
-    EQ = r"=="
-    NE = r"!="
-    LT = r"<"
-    GT = r">"
-
-    BINOR = r"\|\|"
-    BINAND = r"&&"
-    BINXOR = r"\^"
-    BINNOT = r"!|~"
-
-    BOOL = r"(True)|(False)"
-
-    INT = r"\d+"
-    FLOAT = r"0\.\d+"
-    DOUBLE = r"\d\.\d+"
-
-    STRING = r"\"()\"|\"([^\\\n]*?)([\\][\\])*\"|\"(.*?[^\\\n])\""
-    CHAR = r"'(^\n)'"
-
-    TYPE = ":[a-zA-Z_][a-zA-Z0-9_]*"  # Needs to go before COLON because its longer.
-
-    MINUS = r"-"
-    PLUS = r"\+"
-    DIVIDE = r"/"
-    POWER = r"\*\*"
-    TIMES = r"\*"
-    MOD = r"%"
-
-    LBRACKET = r"\["
-    RBRACKET = r"\]"
-
-    RBRACE = r"}"
-    LBRACE = r"{"
-
-    LPAREN = r"\("
-    RPAREN = r"\)"
-
-    SEPARATOR = r","
-    COLON = r":"
-    EQUALS = r"="
-
     tokens = {
         MINUS,
         PLUS,
@@ -98,6 +53,51 @@ class StarlaLexer(sly.Lexer):
         ARROW,
         PASS,
     }
+
+    ARROW = r"->"
+
+    GE = r">="
+    LE = r"<="
+    EQ = r"=="
+    NE = r"!="
+    LT = r"<"
+    GT = r">"
+
+    BINOR = r"\|\|"
+    BINAND = r"&&"
+    BINXOR = r"\^"
+    BINNOT = r"!|~"
+
+    BOOL = r"(True)|(False)"
+
+    FLOAT = r"0\.\d+"
+    DOUBLE = r"\d+\.\d+"
+    INT = r"\d+"
+
+    STRING = r"\"()\"|\"([^\\\n]*?)([\\][\\])*\"|\"(.*?[^\\\n])\""
+    CHAR = r"'(\\?).'"
+
+    TYPE = ":[a-zA-Z_][a-zA-Z0-9_]*"  # Needs to go before COLON because its longer.
+
+    MINUS = r"-"
+    PLUS = r"\+"
+    DIVIDE = r"/"
+    POWER = r"\*\*"
+    TIMES = r"\*"
+    MOD = r"%"
+
+    LBRACKET = r"\["
+    RBRACKET = r"\]"
+
+    RBRACE = r"}"
+    LBRACE = r"{"
+
+    LPAREN = r"\("
+    RPAREN = r"\)"
+
+    SEPARATOR = r","
+    COLON = r":"
+    EQUALS = r"="
 
     reserved_tokens = {
         "def": "DEFINE",
