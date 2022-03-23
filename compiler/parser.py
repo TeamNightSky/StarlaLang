@@ -43,7 +43,7 @@ class StarlaParser(sly.Parser):
         ("left", "AND", "OR"),  # (cond 1) AND (cond2)
         ("right", "NOT"),
         ("left", "LT", "GT", "LE", "GE"),
-        ('left', "BINOR", "BINAND", "BINXOR"),
+        ("left", "BINOR", "BINAND", "BINXOR"),
         ("left", "PLUS", "MINUS"),  # 3 - 2 + 4
         ("left", "TIMES", "DIVIDE"),  # 4 * 6 / 3
         ("right", "UMINUS"),  # -5
@@ -350,7 +350,7 @@ class StarlaParser(sly.Parser):
         "expression GE expression",
         "expression LE expression",
         "expression GT expression",
-        "expression LT expression"
+        "expression LT expression",
     )
     def expression(self, p) -> Operation:
         return Operation.construct(op=p[1], arguments=(p[0], p[2]))
