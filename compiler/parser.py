@@ -64,13 +64,13 @@ class StarlaParser(sly.Parser):
         return p[0]
 
     @_(
+        "pass_statement",
         "if_statement",
         "variable_declaration",
         "function_declaration",
         "while_loop",
         "for_loop",
         "return_statement",
-        "pass_statement",
     )
     def statement(self, p) -> "StatementType":
         return p[0]
@@ -370,7 +370,7 @@ class StarlaParser(sly.Parser):
 
     @_("PASS")
     def pass_statement(self, p) -> Pass:  # pylint: disable=unused-argument
-        return Pass.construct()
+        return Pass()
 
     @_("object")
     def expression(self, p) -> ObjectType:

@@ -34,7 +34,7 @@ class DefaultArg(Ast):
 
 class FunctionDeclaration(Ast):
     target: Namespace
-    annotation: TypeHint
+    annotation: TypeHint = TypeHint(type_value="null")
     arguments: Optional[Tuple[Arg, ...]] = None
     default_arguments: Optional[Tuple[DefaultArg, ...]] = None
     body: "BodyType"
