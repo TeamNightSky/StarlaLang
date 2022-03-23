@@ -6,3 +6,5 @@ tasks:
       . /workspace/venv/bin/activate
       /workspace/venv/bin/python -m pip install poetry
       poetry install
+    command: |
+      . /workspace/venv/bin/activate
