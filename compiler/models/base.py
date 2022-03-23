@@ -2,4 +2,5 @@ from pydantic import BaseModel
 
 
 class Ast(BaseModel):
-    pass
+    def ir(self):
+        pass

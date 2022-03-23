@@ -1,6 +1,8 @@
 tasks:
   - name: Dependencies
     before: |
+      sudo pip uninstall virtualenv
+      sudo pip install virtualenv
       virtualenv /workspace/venv
     init: |
       . /workspace/venv/bin/activate
