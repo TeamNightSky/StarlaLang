@@ -40,9 +40,10 @@ class StarlaParser(sly.Parser):
 
     precedence: t.Tuple[t.Tuple[str, ...], ...] = (
         ("left", "RETURN"),  # return ( expr )
-        ("left", "AND", "OR", "BINOR", "BINAND", "BINXOR"),  # (cond 1) AND (cond2)
+        ("left", "AND", "OR"),  # (cond 1) AND (cond2)
         ("right", "NOT"),
-        ("left", "GT", "LT", "GE", "LE", "NE", "EQ"),
+        ("left", "LT", "GT", "LE", "GE"),
+        ("left", "BINOR", "BINAND", "BINXOR"),
         ("left", "PLUS", "MINUS"),  # 3 - 2 + 4
         ("left", "TIMES", "DIVIDE"),  # 4 * 6 / 3
         ("right", "UMINUS"),  # -5
@@ -333,28 +334,24 @@ class StarlaParser(sly.Parser):
 
     # Expression Operations
     @_(
-        "BINOR",
-        "BINAND",
-        "BINXOR",
-        "OR",
-        "AND",
-        "TIMES",
-        "DIVIDE",
-        "PLUS",
-        "MINUS",
-        "MOD",
-        "POWER",
-        "GT",
-        "GE",
-        "LT",
-        "LE",
-        "NE",
-        "EQ",
+        "expression BINOR expression",
+        "expression BINAND expression",
+        "expression BINXOR expression",
+        "expression OR expression",
+        "expression AND expression",
+        "expression TIMES expression",
+        "expression DIVIDE expression",
+        "expression PLUS expression",
+        "expression MINUS expression",
+        "expression MOD expression",
+        "expression POWER expression",
+        "expression NE expression",
+        "expression EQ expression",
+        "expression GE expression",
+        "expression LE expression",
+        "expression GT expression",
+        "expression LT expression",
     )
-    def op(self, p) -> Operator:
-        return Operator.construct(type=p[0])
-
-    @_("expression op expression")
     def expression(self, p) -> Operation:
         return Operation.construct(op=p[1], arguments=(p[0], p[2]))
 

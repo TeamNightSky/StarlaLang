@@ -5,4 +5,4 @@ from .base import Ast
 
 class TypeHint(Ast):
     type_value: str
-    type_structure: Optional[Tuple["TypeHint", ...]]
+    type_structure: Optional[Tuple["TypeHint", ...]] = None
