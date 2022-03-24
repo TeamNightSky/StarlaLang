@@ -82,7 +82,9 @@ class TestCorrectTokens:
             assert tok.type == "NOT"
 
     def test_STRING(self):
-        for tok in lexer.tokenize(r""" "abc123"  "\'lol\'" "\n\n\n" """):
+        for tok in lexer.tokenize(
+            r""" "abc" "acdef" "1234" "\\\n\v\t\"'" "~pass"  """
+        ):  # TODO: Fix regex to match with \\ at end of string.
             assert tok.type == "STRING"
 
     def test_IF(self):

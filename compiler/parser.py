@@ -111,6 +111,10 @@ class StarlaParser(sly.Parser):
     def object(self, p) -> Dict:
         return Dict.construct(items=p.items)
 
+    @_("LBRACE RBRACE")  # dict
+    def object(self, p) -> Dict:
+        return Dict.construct(items=())
+
     # List
     @_("expression SEPARATOR expression")
     def elements(self, p) -> t.Tuple[ExpressionType, ...]:
@@ -126,13 +130,21 @@ class StarlaParser(sly.Parser):
             return List.construct(items=p.elements)
         return List.construct(items=(p.expression,))
 
+    @_("LBRACKET RBRACKET")
+    def object(self, p) -> List:
+        return List.construct(items=())
+
     @_("LPAREN expression SEPARATOR RPAREN")  # tuple
     def object(self, p) -> Tuple:
         return Tuple.construct(items=(p.expression,))
 
-    @_("LPAREN elements RPAREN", "LPAREN elements SEPARATOR RPAREN")  # tuple
+    @_("LPAREN elements RPAREN", "LPAREN elements SEPARATOR RPAREN")
     def object(self, p) -> Tuple:
         return Tuple.construct(items=p.elements)
+
+    @_("LPAREN RPAREN")
+    def object(self, p) -> Tuple:
+        return Tuple.construct(items=())
 
     @_("function_call")
     def expression(self, p) -> ExpressionType:
@@ -154,13 +166,17 @@ class StarlaParser(sly.Parser):
     def object(self, p) -> Double:
         return Double.construct(value=p[0])
 
+    @staticmethod
+    def unescape_escape_sequences(string: str):
+        return string[1:][:-1].encode().decode("unicode_escape")
+
     @_("STRING")
     def object(self, p) -> String:
-        return String.construct(value=p[0])
+        return String.construct(value=self.unescape_escape_sequences(p[0]))
 
     @_("CHAR")
     def object(self, p) -> Char:
-        return Char.construct(value=p[0])
+        return Char.construct(value=self.unescape_escape_sequences(p[0]))
 
     @_("BOOL")
     def object(self, p) -> Bool:

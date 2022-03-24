@@ -20,6 +20,8 @@ if 1 > 0 and 1 > 1 {
     output("None")
 }
 
+output('\n')
+
 mysupernestedtype :constant[:dict[:int, :list[:int]]] = {
     1 : [1, 2, 3]
 }
