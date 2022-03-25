@@ -7,3 +7,12 @@ class Call(Ast):
     target: "ExpressionType"
     args: Tuple["ExpressionType", ...] = ()
     kwargs: Dict[str, "ExpressionType"] = {}
+
+
+class Comparison(Ast):
+    op: str
+    arguments: Tuple["ExpressionType", "ExpressionType"]
+
+
+class MultiComparison(Ast):
+    comparisons: Tuple[Comparison, ...]

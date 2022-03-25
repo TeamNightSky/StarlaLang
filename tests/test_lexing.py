@@ -202,7 +202,3 @@ class TestCorrectTokens:
     def test_EQ(self):
         for tok in lexer.tokenize(" == == =="):
             assert tok.type == "EQ"
-
-
-def test_incorrect_tokens():
-    assert True

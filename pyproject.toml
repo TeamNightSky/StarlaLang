@@ -40,7 +40,8 @@ disable = [
     "too-many-public-methods",
     "function-redefined",
     "no-self-use",
-    "used-before-assignment"
+    "used-before-assignment",
+    "unused-argument"
 ]
 
 [build-system]

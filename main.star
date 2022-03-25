@@ -3,7 +3,7 @@ my_dict :dict[:int, :int] = {
     3:4
 }
 
-def minus (a :int, b :int, c :int) -> :int {
+def minus (a :int, b :int, c :int, d :int = 2) -> :int {
     return a - b - c
 }
 
