@@ -710,6 +710,81 @@ class TestCorrectParsing:
             )
         )
 
+    ### Negative and Positive Operators
+    def test_PREFIX_SIGNS(self):
+        tree = parse(" + ( 0 - -2 % -3 )")
+        assert tree == Module(
+            body=(
+                Operation(
+                    op="+",
+                    arguments=(
+                        Operation(
+                            op="-",
+                            arguments=(
+                                Int(value="0"),
+                                Operation(
+                                    op="-",
+                                    arguments=(
+                                        Operation(
+                                            op="%",
+                                            arguments=(
+                                                Int(value="2"),
+                                                Operation(
+                                                    op="-",
+                                                    arguments=(Int(value="3"),),
+                                                ),
+                                            ),
+                                        ),
+                                    ),
+                                ),
+                            ),
+                        ),
+                    ),
+                ),
+            )
+        )
+
+    ### Binary Not Operator
+    def test_BINNOT(self):
+        tree = parse(" ! ( 1 && 2 - 10 % ~ 2 ) % 2")
+        assert tree == Module(
+            body=(
+                Operation(
+                    op="!",
+                    arguments=(
+                        Operation(
+                            op="%",
+                            arguments=(
+                                Operation(
+                                    op="&&",
+                                    arguments=(
+                                        Int(value="1"),
+                                        Operation(
+                                            op="-",
+                                            arguments=(
+                                                Int(value="2"),
+                                                Operation(
+                                                    op="%",
+                                                    arguments=(
+                                                        Int(value="10"),
+                                                        Operation(
+                                                            op="~",
+                                                            arguments=(Int(value="2"),),
+                                                        ),
+                                                    ),
+                                                ),
+                                            ),
+                                        ),
+                                    ),
+                                ),
+                                Int(value="2"),
+                            ),
+                        ),
+                    ),
+                ),
+            )
+        )
+
     # Statements
     ## Pass Statement
     def test_PASS(self):

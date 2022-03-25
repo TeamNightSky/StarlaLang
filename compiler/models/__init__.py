@@ -5,7 +5,7 @@ from .composite import Dict, List, Tuple
 from .expressions import Call, Comparison, MultiComparison
 from .module import Module
 from .namespace import Namespace
-from .operator import Operation, Operator
+from .operator import Operation
 from .primitives import Bool, Char, Double, Float, Int, Null, String
 from .statements import (
     Arg,
