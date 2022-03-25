@@ -9,6 +9,7 @@ from .models import (
     Bool,
     Call,
     Char,
+    Comparison,
     DefaultArg,
     Dict,
     Double,
@@ -20,6 +21,7 @@ from .models import (
     Int,
     List,
     Module,
+    MultiComparison,
     Namespace,
     Null,
     ObjectType,
@@ -64,13 +66,13 @@ class StarlaParser(sly.Parser):
         return p[0]
 
     @_(
+        "pass_statement",
         "if_statement",
         "variable_declaration",
         "function_declaration",
         "while_loop",
         "for_loop",
         "return_statement",
-        "pass_statement",
     )
     def statement(self, p) -> "StatementType":
         return p[0]
@@ -107,9 +109,13 @@ class StarlaParser(sly.Parser):
     def items(self, p) -> t.Tuple[t.Tuple[ExpressionType, ExpressionType], ...]:
         return (p.item,)
 
-    @_("LBRACE items RBRACE")  # dict
+    @_("LBRACE items RBRACE", "LBRACE items SEPARATOR RBRACE")
     def object(self, p) -> Dict:
         return Dict.construct(items=p.items)
+
+    @_("LBRACE RBRACE")
+    def object(self, p) -> Dict:
+        return Dict.construct(items=())
 
     # List
     @_("expression SEPARATOR expression")
@@ -120,19 +126,32 @@ class StarlaParser(sly.Parser):
     def elements(self, p) -> t.Tuple[ExpressionType, ...]:
         return p.elements + (p.expression,)
 
-    @_("LBRACKET elements RBRACKET", "LBRACKET expression RBRACKET")  # list
+    @_(
+        "LBRACKET elements RBRACKET",
+        "LBRACKET expression RBRACKET",
+        "LBRACKET elements SEPARATOR RBRACKET",
+        "LBRACKET expression SEPARATOR RBRACKET",
+    )
     def object(self, p) -> List:
         if isinstance(p[1], tuple):
             return List.construct(items=p.elements)
         return List.construct(items=(p.expression,))
 
+    @_("LBRACKET RBRACKET")
+    def object(self, p) -> List:
+        return List.construct(items=())
+
     @_("LPAREN expression SEPARATOR RPAREN")  # tuple
     def object(self, p) -> Tuple:
         return Tuple.construct(items=(p.expression,))
 
-    @_("LPAREN elements RPAREN", "LPAREN elements SEPARATOR RPAREN")  # tuple
+    @_("LPAREN elements RPAREN", "LPAREN elements SEPARATOR RPAREN")
     def object(self, p) -> Tuple:
         return Tuple.construct(items=p.elements)
+
+    @_("LPAREN RPAREN")
+    def object(self, p) -> Tuple:
+        return Tuple.construct(items=())
 
     @_("function_call")
     def expression(self, p) -> ExpressionType:
@@ -154,13 +173,17 @@ class StarlaParser(sly.Parser):
     def object(self, p) -> Double:
         return Double.construct(value=p[0])
 
+    @staticmethod
+    def unescape_escape_sequences(string: str):
+        return string[1:][:-1].encode().decode("unicode_escape")
+
     @_("STRING")
     def object(self, p) -> String:
-        return String.construct(value=p[0])
+        return String.construct(value=self.unescape_escape_sequences(p[0]))
 
     @_("CHAR")
     def object(self, p) -> Char:
-        return Char.construct(value=p[0])
+        return Char.construct(value=self.unescape_escape_sequences(p[0]))
 
     @_("BOOL")
     def object(self, p) -> Bool:
@@ -168,7 +191,7 @@ class StarlaParser(sly.Parser):
 
     @_("NULL")
     def object(self, p) -> Null:  # pylint: disable=unused-argument
-        return Null.construct()
+        return Null()
 
     # Type Hints
     @_("TYPE")
@@ -232,7 +255,7 @@ class StarlaParser(sly.Parser):
 
     @_(
         "DEFINE NAMESPACE "
-        "LPAREN positional_arguments_definition default_arguments_definition RPAREN "
+        "LPAREN positional_arguments_definition SEPARATOR default_arguments_definition RPAREN "
         "ARROW type_hint "
         "LBRACE module RBRACE"
     )
@@ -240,7 +263,7 @@ class StarlaParser(sly.Parser):
         return FunctionDeclaration.construct(
             target=Namespace.construct(name=p[1], ctx="store"),
             arguments=p.positional_arguments_definition,
-            default_arguments=p.default_argument_definition,
+            default_arguments=p.default_arguments_definition,
             annotation=p.type_hint,
             body=p.module.body,
         )
@@ -345,6 +368,11 @@ class StarlaParser(sly.Parser):
         "expression MINUS expression",
         "expression MOD expression",
         "expression POWER expression",
+    )
+    def expression(self, p) -> Operation:
+        return Operation.construct(op=p[1], arguments=(p[0], p[2]))
+
+    @_(
         "expression NE expression",
         "expression EQ expression",
         "expression GE expression",
@@ -352,8 +380,37 @@ class StarlaParser(sly.Parser):
         "expression GT expression",
         "expression LT expression",
     )
-    def expression(self, p) -> Operation:
-        return Operation.construct(op=p[1], arguments=(p[0], p[2]))
+    def comparison(self, p) -> Comparison:
+        return Comparison.construct(op=p[1], arguments=(p.expression0, p.expression1))
+
+    @_(
+        "comparison NE expression",
+        "comparison EQ expression",
+        "comparison GE expression",
+        "comparison LE expression",
+        "comparison GT expression",
+        "comparison LT expression",
+    )
+    def comparison(self, p) -> MultiComparison:
+        if isinstance(p[0], Comparison):
+            last_comparison = p.comparison
+            comparisons = (p.comparison,)
+        elif isinstance(p[0], MultiComparison):
+            last_comparison = p.comparison.comparisons[-1]
+            comparisons = p.comparison.comparisons
+        else:
+            raise ValueError(
+                "Comparison rule returned non-comparison object! How?!?!?!"
+            )
+        new_comparison = Comparison.construct(
+            op=p[1],
+            arguments=(last_comparison.arguments[-1], p.expression),
+        )
+        return MultiComparison.construct(comparisons=comparisons + (new_comparison,))
+
+    @_("comparison")
+    def expression(self, p) -> "ExpressionType":
+        return p.comparison
 
     @_(
         "MINUS expression %prec UMINUS",
@@ -370,7 +427,7 @@ class StarlaParser(sly.Parser):
 
     @_("PASS")
     def pass_statement(self, p) -> Pass:  # pylint: disable=unused-argument
-        return Pass.construct()
+        return Pass()
 
     @_("object")
     def expression(self, p) -> ObjectType:

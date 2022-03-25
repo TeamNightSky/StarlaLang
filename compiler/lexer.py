@@ -101,6 +101,7 @@ class StarlaLexer(sly.Lexer):
 
     reserved_tokens = {
         "def": "DEFINE",
+        "return": "RETURN",
         "null": "NULL",
         "or": "OR",
         "and": "AND",
@@ -112,16 +113,15 @@ class StarlaLexer(sly.Lexer):
         "if": "IF",
         "elif": "ELIF",
         "else": "ELSE",
-        "return": "RETURN",
         "pass": "PASS",
     }
 
-    @_(r"[a-zA-Z_][a-zA-Z0-9_]*")
-    def NAMESPACE(self, t):
-        t.type = self.reserved_tokens.get(t.value, "NAMESPACE")
-        return t
+    @_(r"\w+")
+    def NAMESPACE(self, token):
+        token.type = self.reserved_tokens.get(token.value, "NAMESPACE")
+        return token
 
-    ignore = r" \t"
+    ignore = " \t"
     ignore_COMMENT = r"#(.*)"
 
     @_(r"\n+")

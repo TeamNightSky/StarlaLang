@@ -3,7 +3,7 @@ my_dict :dict[:int, :int] = {
     3:4
 }
 
-def minus (a :int, b :int, c :int) -> :int {
+def minus (a :int, b :int, c :int, d :int = 2) -> :int {
     return a - b - c
 }
 
@@ -19,6 +19,8 @@ if 1 > 0 and 1 > 1 {
 } else {
     output("None")
 }
+
+output('\n')
 
 mysupernestedtype :constant[:dict[:int, :list[:int]]] = {
     1 : [1, 2, 3]
