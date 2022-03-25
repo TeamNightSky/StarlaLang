@@ -2,6 +2,8 @@ import sly  # type: ignore[import]
 
 
 class StarlaLexer(sly.Lexer):
+    literals = {"(", ")", "{", "}", "[", "]", ".", ","}
+
     tokens = {
         MINUS,
         PLUS,
@@ -26,13 +28,6 @@ class StarlaLexer(sly.Lexer):
         GT,
         EQ,
         NE,
-        LBRACKET,
-        RBRACKET,
-        RBRACE,
-        LBRACE,
-        LPAREN,
-        RPAREN,
-        SEPARATOR,
         COLON,
         INT,
         FLOAT,
@@ -86,16 +81,6 @@ class StarlaLexer(sly.Lexer):
     TIMES = r"\*"
     MOD = r"%"
 
-    LBRACKET = r"\["
-    RBRACKET = r"\]"
-
-    RBRACE = r"}"
-    LBRACE = r"{"
-
-    LPAREN = r"\("
-    RPAREN = r"\)"
-
-    SEPARATOR = r","
     COLON = r":"
     EQUALS = r"="
 

@@ -101,7 +101,7 @@ class TestCorrectTokens:
 
     def test_LBRACKET(self):
         for tok in lexer.tokenize(" [ [ [ "):
-            assert tok.type == "LBRACKET"
+            assert tok.type == "["
 
     def test_GE(self):
         for tok in lexer.tokenize(" >= >= >="):
@@ -145,11 +145,11 @@ class TestCorrectTokens:
 
     def test_RPAREN(self):
         for tok in lexer.tokenize(" ) ) ) "):
-            assert tok.type == "RPAREN"
+            assert tok.type == ")"
 
     def test_LBRACE(self):
         for tok in lexer.tokenize(" { { { "):
-            assert tok.type == "LBRACE"
+            assert tok.type == "{"
 
     def test_IN(self):
         for tok in lexer.tokenize(" in in in "):
@@ -169,11 +169,11 @@ class TestCorrectTokens:
 
     def test_RBRACE(self):
         for tok in lexer.tokenize(" } } } "):
-            assert tok.type == "RBRACE"
+            assert tok.type == "}"
 
     def test_SEPARATOR(self):
         for tok in lexer.tokenize(" , , , "):
-            assert tok.type == "SEPARATOR"
+            assert tok.type == ","
 
     def test_BINAND(self):
         for tok in lexer.tokenize(" && && && "):
@@ -185,11 +185,11 @@ class TestCorrectTokens:
 
     def test_LPAREN(self):
         for tok in lexer.tokenize(" ( ( ( "):
-            assert tok.type == "LPAREN"
+            assert tok.type == "("
 
     def test_RBRACKET(self):
         for tok in lexer.tokenize(" ] ] ] "):
-            assert tok.type == "RBRACKET"
+            assert tok.type == "]"
 
     def test_LT(self):
         for tok in lexer.tokenize(" < < < "):
