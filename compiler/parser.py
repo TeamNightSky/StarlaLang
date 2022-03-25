@@ -26,7 +26,6 @@ from .models import (
     Null,
     ObjectType,
     Operation,
-    Operator,
     Pass,
     Return,
     String,
@@ -419,7 +418,7 @@ class StarlaParser(sly.Parser):
         "BINNOT expression %prec UMINUS",
     )
     def expression(self, p) -> Operation:
-        return Operation.construct(op=Operator.construct(type=p[0]), arguments=(p[1],))
+        return Operation.construct(op=p[0], arguments=(p[1],))
 
     @_("LPAREN expression RPAREN")
     def expression(self, p) -> ExpressionType:
