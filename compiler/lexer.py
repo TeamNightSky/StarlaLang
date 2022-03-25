@@ -2,16 +2,7 @@ import sly  # type: ignore[import]
 
 
 class StarlaLexer(sly.Lexer):
-    literals = {
-        '(',
-        ')',
-        '{',
-        '}',
-        '[',
-        ']',
-        '.',
-        ','
-    }
+    literals = {"(", ")", "{", "}", "[", "]", ".", ","}
 
     tokens = {
         MINUS,
