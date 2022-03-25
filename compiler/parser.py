@@ -78,18 +78,18 @@ class StarlaParser(sly.Parser):
         return p[0]
 
     # If Statements
-    @_("IF expression LBRACE module RBRACE")
+    @_("IF expression '{' module '}'")
     def if_statement(self, p) -> IfStatement:
         return IfStatement.construct(conditionals=((p.expression, p.module.body),))
 
-    @_("if_statement ELIF expression LBRACE module RBRACE")
+    @_("if_statement ELIF expression '{' module '}'")
     def if_statement(self, p) -> IfStatement:
         return IfStatement.construct(
             conditionals=p.if_statement.conditionals + ((p.expression, p.module.body),),
             default=p.if_statement.default,
         )
 
-    @_("if_statement ELSE LBRACE module RBRACE")
+    @_("if_statement ELSE '{' module '}'")
     def if_statement(self, p) -> IfStatement:
         return IfStatement.construct(
             conditionals=p.if_statement.conditionals,
@@ -101,7 +101,7 @@ class StarlaParser(sly.Parser):
     def item(self, p) -> t.Tuple[ExpressionType, ExpressionType]:
         return p[0], p[2]
 
-    @_("items SEPARATOR item")
+    @_("items ',' item")
     def items(self, p) -> t.Tuple[t.Tuple[ExpressionType, ExpressionType], ...]:
         return p.items + (p.item,)
 
@@ -109,47 +109,47 @@ class StarlaParser(sly.Parser):
     def items(self, p) -> t.Tuple[t.Tuple[ExpressionType, ExpressionType], ...]:
         return (p.item,)
 
-    @_("LBRACE items RBRACE", "LBRACE items SEPARATOR RBRACE")
+    @_("'{' items '}'", "'{' items ',' '}'")
     def object(self, p) -> Dict:
         return Dict.construct(items=p.items)
 
-    @_("LBRACE RBRACE")
+    @_("'{' '}'")
     def object(self, p) -> Dict:
         return Dict.construct(items=())
 
     # List
-    @_("expression SEPARATOR expression")
+    @_("expression ',' expression")
     def elements(self, p) -> t.Tuple[ExpressionType, ...]:
         return p.expression0, p.expression1
 
-    @_("elements SEPARATOR expression")
+    @_("elements ',' expression")
     def elements(self, p) -> t.Tuple[ExpressionType, ...]:
         return p.elements + (p.expression,)
 
     @_(
-        "LBRACKET elements RBRACKET",
-        "LBRACKET expression RBRACKET",
-        "LBRACKET elements SEPARATOR RBRACKET",
-        "LBRACKET expression SEPARATOR RBRACKET",
+        "'[' elements ']'",
+        "'[' expression ']'",
+        "'[' elements ',' ']'",
+        "'[' expression ',' ']'",
     )
     def object(self, p) -> List:
         if isinstance(p[1], tuple):
             return List.construct(items=p.elements)
         return List.construct(items=(p.expression,))
 
-    @_("LBRACKET RBRACKET")
+    @_("'[' ']'")
     def object(self, p) -> List:
         return List.construct(items=())
 
-    @_("LPAREN expression SEPARATOR RPAREN")  # tuple
+    @_("'(' expression ',' ')'")  # tuple
     def object(self, p) -> Tuple:
         return Tuple.construct(items=(p.expression,))
 
-    @_("LPAREN elements RPAREN", "LPAREN elements SEPARATOR RPAREN")
+    @_("'(' elements ')'", "'(' elements ',' ')'")
     def object(self, p) -> Tuple:
         return Tuple.construct(items=p.elements)
 
-    @_("LPAREN RPAREN")
+    @_("'(' ')'")
     def object(self, p) -> Tuple:
         return Tuple.construct(items=())
 
@@ -198,7 +198,7 @@ class StarlaParser(sly.Parser):
     def type_hint(self, p) -> TypeHint:
         return TypeHint.construct(type_value=p[0].replace(":", "", 1))
 
-    @_("structure SEPARATOR type_hint")
+    @_("structure ',' type_hint")
     def structure(self, p) -> t.Tuple[TypeHint, ...]:
         return p.structure + (p.type_hint,)
 
@@ -206,7 +206,7 @@ class StarlaParser(sly.Parser):
     def structure(self, p) -> t.Tuple[TypeHint]:
         return (p.type_hint,)
 
-    @_("TYPE LBRACKET structure RBRACKET")
+    @_("TYPE '[' structure ']'")
     def type_hint(self, p) -> TypeHint:
         return TypeHint.construct(
             type_value=p[0].replace(":", "", 1), type_structure=p[2]
@@ -233,7 +233,7 @@ class StarlaParser(sly.Parser):
     def positional_arguments_definition(self, p) -> t.Tuple[Arg]:
         return (Arg.construct(arg=p[0], annotation=p[1]),)
 
-    @_("positional_arguments_definition SEPARATOR NAMESPACE type_hint")
+    @_("positional_arguments_definition ',' NAMESPACE type_hint")
     def positional_arguments_definition(self, p) -> t.Tuple[Arg, ...]:
         return p.positional_arguments_definition + (
             Arg.construct(arg=p[2], annotation=p[3]),
@@ -243,7 +243,7 @@ class StarlaParser(sly.Parser):
     def default_arguments_definition(self, p) -> t.Tuple[DefaultArg]:
         return (DefaultArg.construct(arg=p[0], annotation=p[1], value=p[3]),)
 
-    @_("default_arguments_definition SEPARATOR NAMESPACE type_hint EQUALS expression")
+    @_("default_arguments_definition ',' NAMESPACE type_hint EQUALS expression")
     def default_arguments_definition(self, p) -> t.Tuple[DefaultArg, ...]:
         return p.default_argument_definition + (
             DefaultArg.construct(
@@ -255,9 +255,9 @@ class StarlaParser(sly.Parser):
 
     @_(
         "DEFINE NAMESPACE "
-        "LPAREN positional_arguments_definition SEPARATOR default_arguments_definition RPAREN "
+        "'(' positional_arguments_definition ',' default_arguments_definition ')' "
         "ARROW type_hint "
-        "LBRACE module RBRACE"
+        "'{' module '}'"
     )
     def function_declaration(self, p) -> FunctionDeclaration:
         return FunctionDeclaration.construct(
@@ -270,9 +270,9 @@ class StarlaParser(sly.Parser):
 
     @_(
         "DEFINE NAMESPACE "
-        "LPAREN positional_arguments_definition RPAREN "
+        "'(' positional_arguments_definition ')' "
         "ARROW type_hint "
-        "LBRACE module RBRACE"
+        "'{' module '}'"
     )
     def function_declaration(self, p) -> FunctionDeclaration:
         return FunctionDeclaration(
@@ -284,9 +284,9 @@ class StarlaParser(sly.Parser):
 
     @_(
         "DEFINE NAMESPACE "
-        "LPAREN default_arguments_definition RPAREN "
+        "'(' default_arguments_definition ')' "
         "ARROW type_hint "
-        "LBRACE module RBRACE"
+        "'{' module '}'"
     )
     def function_declaration(self, p) -> FunctionDeclaration:
         return FunctionDeclaration.construct(
@@ -296,7 +296,7 @@ class StarlaParser(sly.Parser):
             body=p.module.body,
         )
 
-    @_("DEFINE NAMESPACE LPAREN RPAREN ARROW type_hint LBRACE module RBRACE")
+    @_("DEFINE NAMESPACE '(' ')' ARROW type_hint '{' module '}'")
     def function_declaration(self, p) -> FunctionDeclaration:
         return FunctionDeclaration.construct(
             target=Namespace.construct(name=p[1], ctx="store"),
@@ -309,12 +309,12 @@ class StarlaParser(sly.Parser):
         return Return.construct(value=p[1])
 
     # While Statements
-    @_("WHILE expression LBRACE module RBRACE")
+    @_("WHILE expression '{' module '}'")
     def while_loop(self, p) -> WhileLoop:
         return WhileLoop.construct(conditional=p[1], body=p.module.body)
 
     # For Statements
-    @_("FOR NAMESPACE IN expression LBRACE module RBRACE")
+    @_("FOR NAMESPACE IN expression '{' module '}'")
     def for_loop(self, p) -> ForLoop:
         return ForLoop.construct(
             target=Namespace.construct(name=p[1], ctx="store"),
@@ -331,11 +331,11 @@ class StarlaParser(sly.Parser):
     def keyword_arguments(self, p) -> t.Tuple[t.Tuple[str, "ExpressionType"], ...]:
         return p.keyword_arguments + ((p[1], p.expression),)
 
-    @_("expression LPAREN keyword_arguments RPAREN")
+    @_("expression '(' keyword_arguments ')'")
     def function_call(self, p) -> Call:
         return Call.construct(target=p.expression, kwargs=dict(p.keyword_arguments))
 
-    @_("expression LPAREN elements SEPARATOR keyword_arguments RPAREN")
+    @_("expression '(' elements ',' keyword_arguments ')'")
     def function_call(self, p) -> Call:
         return Call.construct(
             target=p.expression,
@@ -343,15 +343,15 @@ class StarlaParser(sly.Parser):
             kwargs=p.keyword_arguments,
         )
 
-    @_("expression LPAREN elements RPAREN")
+    @_("expression '(' elements ')'")
     def function_call(self, p) -> Call:
         return Call.construct(target=p.expression, args=p.elements)
 
-    @_("expression LPAREN expression RPAREN")
+    @_("expression '(' expression ')'")
     def function_call(self, p) -> Call:
         return Call.construct(target=p.expression0, args=(p.expression1,))
 
-    @_("expression LPAREN RPAREN")
+    @_("expression '(' ')'")
     def function_call(self, p) -> Call:
         return Call.construct(target=p.expression)
 
@@ -421,7 +421,7 @@ class StarlaParser(sly.Parser):
     def expression(self, p) -> Operation:
         return Operation.construct(op=Operator.construct(type=p[0]), arguments=(p[1],))
 
-    @_("LPAREN expression RPAREN")
+    @_("'(' expression ')'")
     def expression(self, p) -> ExpressionType:
         return p[1]
 
