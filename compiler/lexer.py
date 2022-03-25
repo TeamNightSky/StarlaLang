@@ -47,6 +47,7 @@ class StarlaLexer(sly.Lexer):
         BINNOT,
         ARROW,
         PASS,
+        NEWLINE,
     }
 
     ARROW = r"->"
@@ -83,6 +84,8 @@ class StarlaLexer(sly.Lexer):
 
     COLON = r":"
     EQUALS = r"="
+
+    NEWLINE = r";|\n"
 
     reserved_tokens = {
         "def": "DEFINE",

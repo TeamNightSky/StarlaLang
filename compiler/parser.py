@@ -52,7 +52,7 @@ class StarlaParser(sly.Parser):
         ("left", "POWER"),  # 2 ** 3
     )
 
-    @_("module code")
+    @_("module NEWLINE code")
     def module(self, p) -> Module:
         return Module.construct(body=p.module.body + (p.code,))
 

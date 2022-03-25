@@ -42,14 +42,14 @@ class TestCorrectParsing:
     ## Objects
     ### Integer Object
     def test_INT(self):
-        tree = parse("1 1 1 1")
+        tree = parse("1; 1; 1; 1")
         assert tree == Module(
             body=(Int(value="1"), Int(value="1"), Int(value="1"), Int(value="1"))
         )
 
     ### Float Object
     def test_FLOAT(self):
-        tree = parse("0.0123456789 0.0987654321 - 0.1")
+        tree = parse("0.0123456789; 0.0987654321 - 0.1")
         assert tree == Module.construct(
             body=(
                 Float(value="0.0123456789"),
@@ -66,7 +66,7 @@ class TestCorrectParsing:
     ### Double Object
     def test_DOUBLE(self):
         tree = parse(
-            "123456789123456789123456789123456789123456789.1234567891234567098765432123456789098765432 0.0"
+            "123456789123456789123456789123456789123456789.1234567891234567098765432123456789098765432; 0.0"
         )
         assert tree == Module(
             body=(
@@ -79,7 +79,7 @@ class TestCorrectParsing:
 
     ### Char Object
     def test_CHAR(self):
-        tree = parse(r"'1' '2' 'a' ' ' '\t' ")
+        tree = parse(r"'1'; '2'; 'a'; ' '; '\t' ")
         assert tree == Module(
             body=(
                 Char(value="1"),
@@ -92,7 +92,7 @@ class TestCorrectParsing:
 
     ### String Object
     def test_STRING(self):
-        tree = parse(r' "abc" "acdef" "1234" "\\\n\v\t" "~pass" ')
+        tree = parse(r' "abc"; "acdef"; "1234"; "\\\n\v\t"; "~pass" ')
         assert tree == Module.construct(
             body=(
                 String(value="abc"),
@@ -105,7 +105,7 @@ class TestCorrectParsing:
 
     ### Boolean Object
     def test_BOOL(self):
-        tree = parse(" True False True")
+        tree = parse(" True\n False; True")
         assert tree == Module.construct(
             body=(
                 Bool(value="True"),
@@ -116,7 +116,7 @@ class TestCorrectParsing:
 
     ### Null Object
     def test_NULL(self):
-        tree = parse(" null null null ")
+        tree = parse(" null; null; null ")
         assert tree == Module.construct(
             body=(
                 Null(),
@@ -149,7 +149,7 @@ class TestCorrectParsing:
 
     ### List Object
     def test_LIST(self):
-        tree = parse("[1] [1,2] [1, [1, [1, [1]]]] []")
+        tree = parse("[1]; [1,2]; [1, [1, [1, [1]]]]; []")
         assert tree == Module.construct(
             body=(
                 List(items=(Int(value="1"),)),
@@ -935,10 +935,10 @@ class TestCorrectParsing:
     # Function Variations
     def test_FUNCTION(self):
         tree = parse(
-            "def zeb_is_awesome(\n"
-            "friend1 :str,\n"
-            "friend2 :list[:int],\n"
-            'friend3 :str = "nate"\n'
+            "def zeb_is_awesome("
+            "friend1 :str, "
+            "friend2 :list[:int], "
+            'friend3 :str = "nate"'
             ") -> :bool {return True}"
         )
         assert tree == Module.construct(
