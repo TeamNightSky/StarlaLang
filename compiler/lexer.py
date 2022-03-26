@@ -1,5 +1,6 @@
-import sly  # type: ignore[import]
 import logging
+
+import sly  # type: ignore[import]
 
 
 class StarlaLexer(sly.Lexer):
@@ -86,7 +87,6 @@ class StarlaLexer(sly.Lexer):
     COLON = r":"
     EQUALS = r"="
 
-
     reserved_tokens = {
         "def": "DEFINE",
         "return": "RETURN",
@@ -117,6 +117,6 @@ class StarlaLexer(sly.Lexer):
     ignore = " \t"
     ignore_COMMENT = r"#(.*)"
 
-    def error(self, token: sly.lex.Token) -> None:
-        logging.warning("Illegal character", token)
-        self.index += len(token.value)
+    def error(self, t: sly.lex.Token) -> None:
+        logging.warning("Illegal character %s" % t)
+        self.index += len(t.value)

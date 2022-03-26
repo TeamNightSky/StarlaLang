@@ -184,7 +184,6 @@ class StarlaParser(sly.Parser):
         "'(' expression ',' NEWLINE ')'",
         "'(' NEWLINE expression ',' ')'",
         "'(' NEWLINE expression ',' NEWLINE ')'",
-        
     )  # tuple
     def object(self, p) -> Tuple:
         return Tuple.construct(items=(p.expression,))

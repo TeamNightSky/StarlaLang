@@ -1,7 +1,7 @@
 import logging
 import typing as t
 
-import sly
+import sly  # type: ignore[import]
 
 from .lexer import StarlaLexer  # type: ignore[attr-defined]
 from .models import Module
@@ -34,9 +34,7 @@ class CompilerToken:
 
     @property
     def lineco(self) -> int:
-        last_line_break = self.source.rfind("\n", 0, self.original_token.index)
-        if last_line_break < 0:
-            last_line_break = 0
+        last_line_break = max(self.source.rfind("\n", 0, self.original_token.index), 0)
         return token.index - last_line_break + 1
 
 
@@ -47,7 +45,7 @@ class StarlaCompiler:
 
     def prepare_tokens(self, source: str) -> t.Generator[CompilerToken, None, None]:
         for token in self.lexer.tokenize(source):
-            logging.info("Encountered token, %s" % repr(token))
+            logging.info("Encountered token, %r" % token)
             yield CompilerToken(token, source)
 
     def compile(self, source: str, verbosity: int) -> Module:
