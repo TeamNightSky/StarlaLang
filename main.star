@@ -31,7 +31,17 @@ def main (arg :list[:str]) -> :null {
 
     # Foobars are healthy
 
-    mylist :list[:int] = [1,2,3,4,5,6,7,8,9]
+    mylist :list[:int] = [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9
+    ]
 
     for num in mylist {
         output(num)

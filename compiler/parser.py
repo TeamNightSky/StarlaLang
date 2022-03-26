@@ -1,3 +1,4 @@
+import logging
 import sys
 import typing as t
 
@@ -35,6 +36,8 @@ from .models import (
     WhileLoop,
 )
 
+log = logging.getLogger()
+
 
 class StarlaParser(sly.Parser):
     tokens: t.Set[str] = StarlaLexer.tokens
@@ -47,14 +50,22 @@ class StarlaParser(sly.Parser):
         ("left", "BINOR", "BINAND", "BINXOR"),
         ("left", "PLUS", "MINUS"),  # 3 - 2 + 4
         ("left", "TIMES", "DIVIDE"),  # 4 * 6 / 3
-        ("right", "UMINUS"),  # -5
+        ("right", "UMINUS"),  # -5, +5
         ("left", "MOD"),  # 4 % 3
         ("left", "POWER"),  # 2 ** 3
     )
 
-    @_("module NEWLINE code")
+    @_("module code")
     def module(self, p) -> Module:
         return Module.construct(body=p.module.body + (p.code,))
+
+    @_("module NEWLINE")
+    def module(self, p) -> Module:
+        return p.module
+
+    @_("NEWLINE module")
+    def module(self, p) -> Module:
+        return p.module
 
     @_("code")
     def module(self, p):
@@ -100,7 +111,7 @@ class StarlaParser(sly.Parser):
     def item(self, p) -> t.Tuple[ExpressionType, ExpressionType]:
         return p[0], p[2]
 
-    @_("items ',' item")
+    @_("items ',' item", "items ',' NEWLINE item")
     def items(self, p) -> t.Tuple[t.Tuple[ExpressionType, ExpressionType], ...]:
         return p.items + (p.item,)
 
@@ -108,7 +119,16 @@ class StarlaParser(sly.Parser):
     def items(self, p) -> t.Tuple[t.Tuple[ExpressionType, ExpressionType], ...]:
         return (p.item,)
 
-    @_("'{' items '}'", "'{' items ',' '}'")
+    @_(
+        "'{' items '}'",
+        "'{' items ',' '}'",
+        "'{' items NEWLINE '}'",
+        "'{' items ',' NEWLINE '}'",
+        "'{' NEWLINE items '}'",
+        "'{' NEWLINE items ',' '}'",
+        "'{' NEWLINE items NEWLINE '}'",
+        "'{' NEWLINE items ',' NEWLINE '}'",
+    )
     def object(self, p) -> Dict:
         return Dict.construct(items=p.items)
 
@@ -117,11 +137,17 @@ class StarlaParser(sly.Parser):
         return Dict.construct(items=())
 
     # List
-    @_("expression ',' expression")
+    @_(
+        "expression ',' expression",
+        "expression ',' NEWLINE expression",
+    )
     def elements(self, p) -> t.Tuple[ExpressionType, ...]:
         return p.expression0, p.expression1
 
-    @_("elements ',' expression")
+    @_(
+        "elements ',' expression",
+        "elements ',' NEWLINE expression",
+    )
     def elements(self, p) -> t.Tuple[ExpressionType, ...]:
         return p.elements + (p.expression,)
 
@@ -130,21 +156,49 @@ class StarlaParser(sly.Parser):
         "'[' expression ']'",
         "'[' elements ',' ']'",
         "'[' expression ',' ']'",
+        "'[' elements NEWLINE ']'",
+        "'[' expression NEWLINE ']'",
+        "'[' elements ',' NEWLINE ']'",
+        "'[' expression ',' NEWLINE ']'",
+        "'[' NEWLINE elements ']'",
+        "'[' NEWLINE expression ']'",
+        "'[' NEWLINE elements ',' ']'",
+        "'[' NEWLINE expression ',' ']'",
+        "'[' NEWLINE elements NEWLINE ']'",
+        "'[' NEWLINE expression NEWLINE ']'",
+        "'[' NEWLINE elements ',' NEWLINE ']'",
+        "'[' NEWLINE expression ',' NEWLINE ']'",
     )
     def object(self, p) -> List:
-        if isinstance(p[1], tuple):
+        try:
             return List.construct(items=p.elements)
-        return List.construct(items=(p.expression,))
+        except AttributeError:
+            return List.construct(items=(p.expression,))
 
     @_("'[' ']'")
     def object(self, p) -> List:
         return List.construct(items=())
 
-    @_("'(' expression ',' ')'")  # tuple
+    @_(
+        "'(' expression ',' ')'",
+        "'(' expression ',' NEWLINE ')'",
+        "'(' NEWLINE expression ',' ')'",
+        "'(' NEWLINE expression ',' NEWLINE ')'",
+        
+    )  # tuple
     def object(self, p) -> Tuple:
         return Tuple.construct(items=(p.expression,))
 
-    @_("'(' elements ')'", "'(' elements ',' ')'")
+    @_(
+        "'(' elements ')'",
+        "'(' elements ',' ')'",
+        "'(' elements NEWLINE ')'",
+        "'(' elements ',' NEWLINE ')'",
+        "'(' NEWLINE elements ')'",
+        "'(' NEWLINE elements ',' ')'",
+        "'(' NEWLINE elements NEWLINE ')'",
+        "'(' NEWLINE elements ',' NEWLINE ')'",
+    )
     def object(self, p) -> Tuple:
         return Tuple.construct(items=p.elements)
 
@@ -433,7 +487,7 @@ class StarlaParser(sly.Parser):
         return p[0]
 
     @staticmethod
-    def error(token):
+    def error(token: sly.lex.Token):
         if token is None:
             return
         print("Syntax error", token)

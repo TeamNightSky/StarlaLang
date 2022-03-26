@@ -1,4 +1,5 @@
 import sly  # type: ignore[import]
+import logging
 
 
 class StarlaLexer(sly.Lexer):
@@ -85,7 +86,6 @@ class StarlaLexer(sly.Lexer):
     COLON = r":"
     EQUALS = r"="
 
-    NEWLINE = r";|\n"
 
     reserved_tokens = {
         "def": "DEFINE",
@@ -109,13 +109,14 @@ class StarlaLexer(sly.Lexer):
         token.type = self.reserved_tokens.get(token.value, "NAMESPACE")
         return token
 
+    @_(r"(;|\n)+")
+    def NEWLINE(self, token: sly.lex.Token) -> sly.lex.Token:
+        self.lineno += len(token.value)
+        return token
+
     ignore = " \t"
     ignore_COMMENT = r"#(.*)"
 
-    @_(r"\n+")
-    def ignore_newline(self, t) -> None:
-        self.lineno += t.value.count("\n")
-
-    def error(self, t) -> None:
-        print("Illegal character", t)
-        self.index += 1
+    def error(self, token: sly.lex.Token) -> None:
+        logging.warning("Illegal character", token)
+        self.index += len(token.value)
