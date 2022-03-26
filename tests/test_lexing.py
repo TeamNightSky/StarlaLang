@@ -10,7 +10,7 @@ lexer = StarlaLexer()
 
 class TestCorrectTokens:
     def test_ignore(self):
-        for tok in lexer.tokenize("   \n\n\n \t\t\t"):
+        for tok in lexer.tokenize("    \t\t\t"):
             assert False
 
     def test_ARROW(self):
@@ -124,7 +124,7 @@ class TestCorrectTokens:
             assert tok.type == "BINOR"
 
     def test_CHAR(self):
-        for tok in lexer.tokenize(" 'a' '1' ' ' '\n' "):
+        for tok in lexer.tokenize(r" 'a' '1' ' ' '\n' "):
             assert tok.type == "CHAR"
 
     def test_EQUALS(self):

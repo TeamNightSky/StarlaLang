@@ -41,7 +41,9 @@ disable = [
     "function-redefined",
     "no-self-use",
     "used-before-assignment",
-    "unused-argument"
+    "unused-argument",
+    "logging-not-lazy",
+    "consider-using-f-string"
 ]
 
 [build-system]
