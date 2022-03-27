@@ -229,9 +229,34 @@ class StarlaParser(sly.Parser):
     def unescape_escape_sequences(string: str):
         return string[1:][:-1].encode().decode("unicode_escape")
 
+    @_(
+        "STRING STRING",
+        "CHAR STRING",
+        "STRING CHAR",
+        "CHAR CHAR",
+        
+    )
+    def string(self, p) -> String:
+        return String.construct(
+            value=self.unescape_escape_sequences(p[0]) + self.unescape_escape_sequences(p[1])
+        )
+
+    @_(
+        "string STRING",
+        "string CHAR",
+    )
+    def string(self, p) -> String:
+        return String.construct(
+            value=p.string.value + self.unescape_escape_sequences(p[1])
+        )
+
     @_("STRING")
     def object(self, p) -> String:
-        return String.construct(value=self.unescape_escape_sequences(p[0]))
+        return String.construct(value=self.unescape_escape_sequences(p.STRING))
+
+    @_("string")
+    def object(self, p) -> String:
+        return p.string
 
     @_("CHAR")
     def object(self, p) -> Char:
