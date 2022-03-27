@@ -4,6 +4,7 @@ import sly  # type: ignore[import]
 
 
 class StarlaLexer(sly.Lexer):
+    log = logging.getLogger(__name__)
     literals = {"(", ")", "{", "}", "[", "]", ".", ","}
 
     tokens = {
