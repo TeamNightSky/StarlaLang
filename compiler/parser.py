@@ -39,7 +39,7 @@ from .models import (
 
 class SlyLogger:
     log = logging.getLogger(__name__)
-    buffer = {
+    buffer: t.Dict[str, t.List[str]] = {
         "DEBUG": [],
         "INFO": [],
         "WARNING": [],
