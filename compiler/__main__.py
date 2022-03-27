@@ -1,10 +1,9 @@
-import logging
 import io
+import logging
 
 import click  # type: ignore[import]
 
 from .compiler import StarlaCompiler
-
 
 compiler = StarlaCompiler()
 
@@ -25,15 +24,14 @@ def cli_compile(file: io.TextIOWrapper, level: str):
 @cli.command(name="interactive")
 def cli_interactive(verbose: int):
     """Debug your code interactively by looking at ASTs of snippets!"""
+    code = ""
+    click.echo("------ Code Editor ------")
     while True:
-        code = ""
-        click.echo("------ Code Editor ------")
-        while True:
-            line = input(": ")
-            if line.strip() == "":
-                break
-            code += line + "\n"
-        click.echo(compiler.compile(code, verbosity=4 - verbose))
+        line = input(": ")
+        if line.strip() == "":
+            break
+        code += line + "\n"
+    click.echo(compiler.compile(code, level=getattr(logging, level.upper())))
 
 
 cli()  # pylint: disable=no-value-for-parameter
