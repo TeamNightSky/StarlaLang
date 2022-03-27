@@ -36,10 +36,41 @@ from .models import (
     WhileLoop,
 )
 
-log = logging.getLogger()
+
+class SlyLogger:
+    log = logging.getLogger(__name__)
+    buffer: t.Dict[str, t.List[str]] = {
+        "DEBUG": [],
+        "INFO": [],
+        "WARNING": [],
+        "ERROR": [],
+        "CRITICAL": [],
+    }
+
+    def debug(self, msg, *args, **kwargs):
+        self.buffer["DEBUG"].append(msg % args)
+
+    def info(self, msg, *args, **kwargs):
+        self.buffer["INFO"].append(msg % args)
+
+    def warning(self, msg, *args, **kwargs):
+        self.buffer["WARNING"].append(msg % args)
+
+    def error(self, msg, *args, **kwargs):
+        self.buffer["ERROR"].append(msg % args)
+
+    def critical(self, msg, *args, **kwargs):
+        self.buffer["CRITICAL"].append(msg % args)
+
+    def flush(self):
+        for level, messages in self.buffer.items():
+            for msg in messages:
+                self.log.log(level=getattr(logging, level.upper()), msg=msg)
 
 
 class StarlaParser(sly.Parser):
+    log = SlyLogger()
+
     tokens: t.Set[str] = StarlaLexer.tokens
 
     precedence: t.Tuple[t.Tuple[str, ...], ...] = (
@@ -229,9 +260,34 @@ class StarlaParser(sly.Parser):
     def unescape_escape_sequences(string: str):
         return string[1:][:-1].encode().decode("unicode_escape")
 
+    @_(
+        "STRING STRING",
+        "CHAR STRING",
+        "STRING CHAR",
+        "CHAR CHAR",
+    )
+    def string(self, p) -> String:
+        return String.construct(
+            value=self.unescape_escape_sequences(p[0])
+            + self.unescape_escape_sequences(p[1])
+        )
+
+    @_(
+        "string STRING",
+        "string CHAR",
+    )
+    def string(self, p) -> String:
+        return String.construct(
+            value=p.string.value + self.unescape_escape_sequences(p[1])
+        )
+
     @_("STRING")
     def object(self, p) -> String:
-        return String.construct(value=self.unescape_escape_sequences(p[0]))
+        return String.construct(value=self.unescape_escape_sequences(p.STRING))
+
+    @_("string")
+    def object(self, p) -> String:
+        return p.string
 
     @_("CHAR")
     def object(self, p) -> Char:

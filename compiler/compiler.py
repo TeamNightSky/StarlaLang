@@ -39,18 +39,22 @@ class CompilerToken:
 
 
 class StarlaCompiler:
-    def __init__(self) -> None:
+    def __init__(self):
         self.lexer = StarlaLexer()
         self.parser = StarlaParser()
 
-    def prepare_tokens(self, source: str) -> t.Generator[CompilerToken, None, None]:
+    def tokens(self, source: str) -> t.Generator[CompilerToken, None, None]:
         for token in self.lexer.tokenize(source):
-            logging.info("Encountered token, %r" % token)
+            self.lexer.log.debug("Encountered token, %r" % token)
             yield CompilerToken(token, source)
 
-    def compile(self, source: str, verbosity: int) -> Module:
+    def compile(self, source: str, level: int = 0) -> Module:
         logging.basicConfig(
-            format="%(filename)10s:%(lineno)4d:%(message)s", level=verbosity * 10
+            format="[%(name)s] (%(levelname)s) %(message)s",
+            level=level,
         )
-        tree = self.parser.parse(self.prepare_tokens(source))
-        return tree
+        return self.parse(source)
+
+    def parse(self, source: str) -> Module:
+        self.parser.log.flush()
+        return self.parser.parse(self.tokens(source))

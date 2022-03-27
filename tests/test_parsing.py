@@ -785,6 +785,10 @@ class TestCorrectParsing:
             )
         )
 
+    def test_MULTI_PART_STRING(self):
+        tree = parse(r""" "1" '\n' "abc" """)
+        assert tree == Module.construct(body=(String(value="1\nabc"),))
+
     # Statements
     ## Pass Statement
     def test_PASS(self):
