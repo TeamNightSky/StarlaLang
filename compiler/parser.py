@@ -18,6 +18,7 @@ from .models import (
     Float,
     ForLoop,
     FunctionDeclaration,
+    GetAttr,
     IfStatement,
     Int,
     List,
@@ -29,6 +30,7 @@ from .models import (
     Operation,
     Pass,
     Return,
+    SetAttr,
     String,
     Tuple,
     TypeHint,
@@ -140,7 +142,7 @@ class StarlaParser(sly.Parser):
     # Dict
     @_("expression COLON expression")
     def item(self, p) -> t.Tuple[ExpressionType, ExpressionType]:
-        return p[0], p[2]
+        return p.expression0, p.expression1
 
     @_("items ',' item", "items ',' NEWLINE item")
     def items(self, p) -> t.Tuple[t.Tuple[ExpressionType, ExpressionType], ...]:
@@ -238,23 +240,23 @@ class StarlaParser(sly.Parser):
 
     @_("function_call")
     def expression(self, p) -> ExpressionType:
-        return p[0]
+        return p.function_call
 
     @_("NAMESPACE")
     def expression(self, p) -> Namespace:
-        return Namespace.construct(name=p[0], ctx="load")
+        return Namespace.construct(name=p.NAMESPACE, ctx="load")
 
     @_("INT")
     def object(self, p) -> Int:
-        return Int.construct(value=p[0])
+        return Int.construct(value=p.INT)
 
     @_("FLOAT")
     def object(self, p) -> Float:
-        return Float.construct(value=p[0])
+        return Float.construct(value=p.FLOAT)
 
     @_("DOUBLE")
     def object(self, p) -> Double:
-        return Double.construct(value=p[0])
+        return Double.construct(value=p.DOUBLE)
 
     @staticmethod
     def unescape_escape_sequences(string: str):
@@ -291,7 +293,7 @@ class StarlaParser(sly.Parser):
 
     @_("CHAR")
     def object(self, p) -> Char:
-        return Char.construct(value=self.unescape_escape_sequences(p[0]))
+        return Char.construct(value=self.unescape_escape_sequences(p.CHAR))
 
     @_("BOOL")
     def object(self, p) -> Bool:
@@ -304,7 +306,7 @@ class StarlaParser(sly.Parser):
     # Type Hints
     @_("TYPE")
     def type_hint(self, p) -> TypeHint:
-        return TypeHint.construct(type_value=p[0].replace(":", "", 1))
+        return TypeHint.construct(type_value=p.TYPE.replace(":", "", 1))
 
     @_("structure ',' type_hint")
     def structure(self, p) -> t.Tuple[TypeHint, ...]:
@@ -317,14 +319,15 @@ class StarlaParser(sly.Parser):
     @_("TYPE '[' structure ']'")
     def type_hint(self, p) -> TypeHint:
         return TypeHint.construct(
-            type_value=p[0].replace(":", "", 1), type_structure=p[2]
+            type_value=p.TYPE.replace(":", "", 1),
+            type_structure=p.structure,
         )
 
     # Variable Declarations
     @_("NAMESPACE type_hint EQUALS expression")
     def variable_declaration(self, p) -> VariableDeclaration:
         return VariableDeclaration.construct(
-            target=Namespace.construct(name=p[0], ctx="store"),
+            target=Namespace.construct(name=p.NAMESPACE, ctx="store"),
             annotation=p.type_hint,
             value=p.expression,
         )
@@ -332,7 +335,7 @@ class StarlaParser(sly.Parser):
     @_("NAMESPACE EQUALS expression")
     def variable_declaration(self, p) -> VariableDeclaration:
         return VariableDeclaration.construct(
-            target=Namespace.construct(name=p[0], ctx="store"),
+            target=Namespace.construct(name=p.NAMESPACE, ctx="store"),
             value=p.expression,
         )
 
@@ -344,18 +347,22 @@ class StarlaParser(sly.Parser):
     @_("positional_arguments_definition ',' NAMESPACE type_hint")
     def positional_arguments_definition(self, p) -> t.Tuple[Arg, ...]:
         return p.positional_arguments_definition + (
-            Arg.construct(arg=p[2], annotation=p[3]),
+            Arg.construct(arg=p.NAMESPACE, annotation=p.type_hint),
         )
 
     @_("NAMESPACE type_hint EQUALS expression")
     def default_arguments_definition(self, p) -> t.Tuple[DefaultArg]:
-        return (DefaultArg.construct(arg=p[0], annotation=p[1], value=p[3]),)
+        return (
+            DefaultArg.construct(
+                arg=p.NAMESPACE, annotation=p.type_hint, value=p.expression
+            ),
+        )
 
     @_("default_arguments_definition ',' NAMESPACE type_hint EQUALS expression")
     def default_arguments_definition(self, p) -> t.Tuple[DefaultArg, ...]:
         return p.default_argument_definition + (
             DefaultArg.construct(
-                arg=p[2],
+                arg=p.NAMESPACE,
                 annotation=p.type_hint,
                 value=p.expression,
             ),
@@ -369,7 +376,7 @@ class StarlaParser(sly.Parser):
     )
     def function_declaration(self, p) -> FunctionDeclaration:
         return FunctionDeclaration.construct(
-            target=Namespace.construct(name=p[1], ctx="store"),
+            target=Namespace.construct(name=p.NAMESPACE, ctx="store"),
             arguments=p.positional_arguments_definition,
             default_arguments=p.default_arguments_definition,
             annotation=p.type_hint,
@@ -384,7 +391,7 @@ class StarlaParser(sly.Parser):
     )
     def function_declaration(self, p) -> FunctionDeclaration:
         return FunctionDeclaration(
-            target=Namespace.construct(name=p[1], ctx="store"),
+            target=Namespace.construct(name=p.NAMESPACE, ctx="store"),
             arguments=p.positional_arguments_definition,
             annotation=p.type_hint,
             body=p.module.body,
@@ -398,7 +405,7 @@ class StarlaParser(sly.Parser):
     )
     def function_declaration(self, p) -> FunctionDeclaration:
         return FunctionDeclaration.construct(
-            target=Namespace.construct(name=p[1], ctx="store"),
+            target=Namespace.construct(name=p.NAMESPACE, ctx="store"),
             default_arguments=p.default_argument_definition,
             annotation=p.type_hint,
             body=p.module.body,
@@ -407,25 +414,25 @@ class StarlaParser(sly.Parser):
     @_("DEFINE NAMESPACE '(' ')' ARROW type_hint '{' module '}'")
     def function_declaration(self, p) -> FunctionDeclaration:
         return FunctionDeclaration.construct(
-            target=Namespace.construct(name=p[1], ctx="store"),
+            target=Namespace.construct(name=p.NAMESPACE, ctx="store"),
             annotation=p.type_hint,
             body=p.module.body,
         )
 
     @_("RETURN expression")
     def return_statement(self, p) -> Return:
-        return Return.construct(value=p[1])
+        return Return.construct(value=p.expression)
 
     # While Statements
     @_("WHILE expression '{' module '}'")
     def while_loop(self, p) -> WhileLoop:
-        return WhileLoop.construct(conditional=p[1], body=p.module.body)
+        return WhileLoop.construct(conditional=p.expression, body=p.module.body)
 
     # For Statements
     @_("FOR NAMESPACE IN expression '{' module '}'")
     def for_loop(self, p) -> ForLoop:
         return ForLoop.construct(
-            target=Namespace.construct(name=p[1], ctx="store"),
+            target=Namespace.construct(name=p.NAMESPACE, ctx="store"),
             iterator=p.expression,
             body=p.module.body,
         )
@@ -433,17 +440,27 @@ class StarlaParser(sly.Parser):
     # Function Calls
     @_("NAMESPACE EQUALS expression")
     def keyword_arguments(self, p) -> t.Tuple[t.Tuple[str, "ExpressionType"]]:
-        return ((p[0], p.expression),)
+        return ((p.NAMESPACE, p.expression),)
 
-    @_("keyword_arguments NAMESPACE EQUALS expression")
+    @_(
+        "keyword_arguments ',' NAMESPACE EQUALS expression",
+        "keyword_arguments ',' NEWLINE NAMESPACE EQUALS expression",
+    )
     def keyword_arguments(self, p) -> t.Tuple[t.Tuple[str, "ExpressionType"], ...]:
-        return p.keyword_arguments + ((p[1], p.expression),)
+        return p.keyword_arguments + ((p.NAMESPACE, p.expression),)
 
     @_("expression '(' keyword_arguments ')'")
     def function_call(self, p) -> Call:
-        return Call.construct(target=p.expression, kwargs=dict(p.keyword_arguments))
+        return Call.construct(target=p.expression, kwargs=p.keyword_arguments)
 
-    @_("expression '(' elements ',' keyword_arguments ')'")
+    @_(
+        "expression '(' elements ',' keyword_arguments ')'",
+        "expression '(' NEWLINE elements ',' keyword_arguments ')'",
+        "expression '(' NEWLINE elements ',' NEWLINE keyword_arguments ')'",
+        "expression '(' NEWLINE elements ',' NEWLINE keyword_arguments NEWLINE ')'",
+        "expression '(' elements ',' NEWLINE keyword_arguments NEWLINE ')'",
+        "expression '(' elements ',' keyword_arguments NEWLINE ')'",
+    )
     def function_call(self, p) -> Call:
         return Call.construct(
             target=p.expression,
@@ -478,7 +495,7 @@ class StarlaParser(sly.Parser):
         "expression POWER expression",
     )
     def expression(self, p) -> Operation:
-        return Operation.construct(op=p[1], arguments=(p[0], p[2]))
+        return Operation.construct(op=p[1], arguments=(p.expression0, p.expression1))
 
     @_(
         "expression NE expression",
@@ -527,15 +544,31 @@ class StarlaParser(sly.Parser):
         "BINNOT expression %prec UMINUS",
     )
     def expression(self, p) -> Operation:
-        return Operation.construct(op=p[0], arguments=(p[1],))
+        return Operation.construct(op=p[0], arguments=(p.expression,))
 
     @_("'(' expression ')'")
     def expression(self, p) -> ExpressionType:
-        return p[1]
+        return p.expression
 
     @_("PASS")
     def pass_statement(self, p) -> Pass:  # pylint: disable=unused-argument
         return Pass()
+
+    @_("get_attr EQUALS expression")
+    def statement(self, p) -> SetAttr:
+        return SetAttr.construct(
+            target=p.get_attr.target,
+            attr=p.get_attr.attr,
+            value=p.expression,
+        )
+
+    @_("expression '.' NAMESPACE")
+    def get_attr(self, p) -> GetAttr:
+        return GetAttr.construct(target=p.expression, attr=p.NAMESPACE)
+
+    @_("get_attr")
+    def expression(self, p) -> GetAttr:
+        return p.get_attr
 
     @_("object")
     def expression(self, p) -> ObjectType:

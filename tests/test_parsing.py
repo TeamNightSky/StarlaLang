@@ -10,6 +10,7 @@ from compiler.models import (
     Float,
     ForLoop,
     FunctionDeclaration,
+    GetAttr,
     IfStatement,
     Int,
     List,
@@ -20,6 +21,7 @@ from compiler.models import (
     Operation,
     Pass,
     Return,
+    SetAttr,
     String,
     Tuple,
     TypeHint,
@@ -715,21 +717,21 @@ class TestCorrectParsing:
         tree = parse(" + ( 0 - -2 % -3 )")
         assert tree == Module(
             body=(
-                Operation(
+                Operation.construct(
                     op="+",
                     arguments=(
-                        Operation(
+                        Operation.construct(
                             op="-",
                             arguments=(
                                 Int(value="0"),
-                                Operation(
+                                Operation.construct(
                                     op="-",
                                     arguments=(
-                                        Operation(
+                                        Operation.construct(
                                             op="%",
                                             arguments=(
                                                 Int(value="2"),
-                                                Operation(
+                                                Operation.construct(
                                                     op="-",
                                                     arguments=(Int(value="3"),),
                                                 ),
@@ -749,25 +751,25 @@ class TestCorrectParsing:
         tree = parse(" ! ( 1 && 2 - 10 % ~ 2 ) % 2")
         assert tree == Module(
             body=(
-                Operation(
+                Operation.construct(
                     op="!",
                     arguments=(
-                        Operation(
+                        Operation.construct(
                             op="%",
                             arguments=(
-                                Operation(
+                                Operation.construct(
                                     op="&&",
                                     arguments=(
                                         Int(value="1"),
-                                        Operation(
+                                        Operation.construct(
                                             op="-",
                                             arguments=(
                                                 Int(value="2"),
-                                                Operation(
+                                                Operation.construct(
                                                     op="%",
                                                     arguments=(
                                                         Int(value="10"),
-                                                        Operation(
+                                                        Operation.construct(
                                                             op="~",
                                                             arguments=(Int(value="2"),),
                                                         ),
@@ -821,7 +823,7 @@ class TestCorrectParsing:
                                 Call.construct(
                                     target=Namespace(name="output", ctx="load"),
                                     args=(String(value="foobars are nutritious"),),
-                                    kwargs={},
+                                    kwargs=(),
                                 ),
                             ),
                         ),
@@ -841,13 +843,13 @@ class TestCorrectParsing:
                             Call.construct(
                                 target=Namespace(name="iscool", ctx="load"),
                                 args=(Namespace(name="zeb", ctx="load"),),
-                                kwargs={},
+                                kwargs=(),
                             ),
                             (
                                 Call.construct(
                                     target=Namespace(name="party", ctx="load"),
                                     args=(),
-                                    kwargs={},
+                                    kwargs=(),
                                 ),
                             ),
                         ),
@@ -855,13 +857,13 @@ class TestCorrectParsing:
                             Call.construct(
                                 target=Namespace(name="iscool", ctx="load"),
                                 args=(Namespace(name="nate", ctx="load"),),
-                                kwargs={},
+                                kwargs=(),
                             ),
                             (
                                 Call.construct(
                                     target=Namespace(name="party", ctx="load"),
                                     args=(),
-                                    kwargs={},
+                                    kwargs=(),
                                 ),
                             ),
                         ),
@@ -885,7 +887,7 @@ class TestCorrectParsing:
                                 Call.construct(
                                     target=Namespace(name="output", ctx="load"),
                                     args=(String(value="foo"),),
-                                    kwargs={},
+                                    kwargs=(),
                                 ),
                             ),
                         ),
@@ -1007,6 +1009,92 @@ class TestCorrectParsing:
                             ),
                             Bool(value="False"),
                         ),
+                    ),
+                ),
+            )
+        )
+
+    def test_CALL_FUNCTION(self):
+        tree = parse(" (1 + 2)(1, 2, 3, four=5, six=7)(chained_call=2)(call=3) ")
+        assert tree == Module.construct(
+            body=(
+                Call.construct(
+                    target=Call.construct(
+                        target=Call.construct(
+                            target=Operation.construct(
+                                op="+", arguments=(Int(value="1"), Int(value="2"))
+                            ),
+                            args=(Int(value="1"), Int(value="2"), Int(value="3")),
+                            kwargs=(("four", Int(value="5")), ("six", Int(value="7"))),
+                        ),
+                        args=(),
+                        kwargs=(("chained_call", Int(value="2")),),
+                    ),
+                    args=(),
+                    kwargs=(("call", Int(value="3")),),
+                ),
+            )
+        )
+
+    def test_GET_ATTR(self):
+        tree = parse(' (1 + 2).bit_length() \n "abc".a.b.c.d.upper(1, kwarg=0)')
+        assert tree == Module.construct(
+            body=(
+                Call(
+                    target=GetAttr(
+                        target=Operation(
+                            op="+", arguments=(Int(value="1"), Int(value="2"))
+                        ),
+                        attr="bit_length",
+                    ),
+                    args=(),
+                    kwargs=(),
+                ),
+                Call(
+                    target=GetAttr(
+                        target=GetAttr(
+                            target=GetAttr(
+                                target=GetAttr(
+                                    target=GetAttr(
+                                        target=String(value="abc"), attr="a"
+                                    ),
+                                    attr="b",
+                                ),
+                                attr="c",
+                            ),
+                            attr="d",
+                        ),
+                        attr="upper",
+                    ),
+                    args=(Int(value="1"),),
+                    kwargs=(
+                        (
+                            "lol",
+                            Operation.construct(
+                                op="+", arguments=(Int(value="0"), Int(value="0"))
+                            ),
+                        )
+                    ),
+                ),
+            )
+        )
+
+    def test_SET_ATTR(self):
+        tree = parse(" module.class.attribute.value = get_value() ")
+        assert tree == Module.construct(
+            body=(
+                SetAttr.construct(
+                    target=GetAttr.construct(
+                        target=GetAttr.construct(
+                            target=Namespace(name="module", ctx="load"), attr="class"
+                        ),
+                        attr="attribute",
+                    ),
+                    attr="value",
+                    value=Call.construct(
+                        target=Namespace(name="get_value", ctx="load"),
+                        args=(),
+                        kwargs=(),
                     ),
                 ),
             )

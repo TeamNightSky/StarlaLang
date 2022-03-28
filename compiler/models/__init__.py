@@ -2,7 +2,7 @@ import typing as t
 
 from .base import Ast
 from .composite import Dict, List, Tuple
-from .expressions import Call, Comparison, MultiComparison
+from .expressions import Call, Comparison, GetAttr, MultiComparison, SetAttr
 from .module import Module
 from .namespace import Namespace
 from .operator import Operation
@@ -28,11 +28,14 @@ StatementType = t.Union[
     ForLoop,
     Pass,
     Return,
+    SetAttr,
 ]
 
 ObjectType = t.Union[Int, Float, Double, String, Char, Bool, Dict, Tuple, List]
 
-ExpressionType = t.Union[ObjectType, Call, MultiComparison, Comparison, Operation]
+ExpressionType = t.Union[
+    ObjectType, Call, MultiComparison, Comparison, Operation, GetAttr
+]
 
 BodyType = t.Tuple[t.Union[ExpressionType, StatementType], ...]
 
